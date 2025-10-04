@@ -69,7 +69,14 @@ export default function StudentGame() {
 
     const word = shuffledWords[currentWordIndex];
     const letters = word.split('');
-    setAvailableLetters(shuffleArray(letters));
+
+    if (session?.keyboard_mode) {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      setAvailableLetters(alphabet);
+    } else {
+      setAvailableLetters(shuffleArray(letters));
+    }
+
     setPlacedLetters(new Array(letters.length).fill(null));
     setAttemptCount(0);
     setShowCorrect(false);
@@ -85,9 +92,11 @@ export default function StudentGame() {
     const firstEmpty = placedLetters.findIndex(l => l === null);
     if (firstEmpty === -1) return;
 
-    const newAvailable = [...availableLetters];
-    newAvailable.splice(index, 1);
-    setAvailableLetters(newAvailable);
+    if (!session?.keyboard_mode) {
+      const newAvailable = [...availableLetters];
+      newAvailable.splice(index, 1);
+      setAvailableLetters(newAvailable);
+    }
 
     const newPlaced = [...placedLetters];
     newPlaced[firstEmpty] = letter;
@@ -106,7 +115,9 @@ export default function StudentGame() {
     newPlaced[index] = null;
     setPlacedLetters(newPlaced);
 
-    setAvailableLetters([...availableLetters, letter]);
+    if (!session?.keyboard_mode) {
+      setAvailableLetters([...availableLetters, letter]);
+    }
   }
 
   async function checkWord(word: (string | null)[]) {
@@ -188,8 +199,16 @@ export default function StudentGame() {
   }
 
   function handleRetry() {
-    const letters = shuffledWords[currentWordIndex].split('');
-    setAvailableLetters(shuffleArray(letters));
+    const word = shuffledWords[currentWordIndex];
+    const letters = word.split('');
+
+    if (session?.keyboard_mode) {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      setAvailableLetters(alphabet);
+    } else {
+      setAvailableLetters(shuffleArray(letters));
+    }
+
     setPlacedLetters(new Array(letters.length).fill(null));
     setShowIncorrect(false);
     setIncorrectPositions([]);
@@ -313,14 +332,16 @@ export default function StudentGame() {
           </div>
 
           <div>
-            <p className="text-center text-gray-600 mb-4 text-lg">Lettres disponibles</p>
-            <div className="flex justify-center gap-2 flex-wrap">
+            <p className="text-center text-gray-600 mb-4 text-lg">
+              {session?.keyboard_mode ? 'Clavier complet' : 'Lettres disponibles'}
+            </p>
+            <div className={`flex justify-center gap-2 flex-wrap ${session?.keyboard_mode ? 'max-w-2xl mx-auto' : ''}`}>
               {availableLetters.map((letter, index) => (
                 <button
-                  key={index}
+                  key={session?.keyboard_mode ? letter : index}
                   onClick={() => handleLetterClick(letter, index)}
                   disabled={showCorrect || showIncorrect}
-                  className="w-16 h-16 bg-orange-500 text-white rounded-lg text-3xl font-bold hover:bg-orange-600 transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  className={`${session?.keyboard_mode ? 'w-12 h-12 text-xl' : 'w-16 h-16 text-3xl'} bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg`}
                 >
                   {letter}
                 </button>

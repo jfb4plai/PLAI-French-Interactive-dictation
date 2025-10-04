@@ -115,6 +115,11 @@ function SessionCard({ session, getResultsCount }: { session: Session; getResult
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
               {session.access_code}
             </span>
+            {session.keyboard_mode && (
+              <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                Clavier complet
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-6 text-gray-600">
             <span>{session.word_list.length} mots</span>

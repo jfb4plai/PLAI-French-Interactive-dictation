@@ -15,6 +15,7 @@ export interface Session {
   word_list: string[];
   access_code: string;
   created_at: string;
+  keyboard_mode: boolean;
 }
 
 export interface WordAttempt {

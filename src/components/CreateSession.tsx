@@ -11,6 +11,7 @@ interface CreateSessionProps {
 export default function CreateSession({ onBack }: CreateSessionProps) {
   const [teacherName, setTeacherName] = useState('');
   const [wordListText, setWordListText] = useState('');
+  const [keyboardMode, setKeyboardMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [createdSession, setCreatedSession] = useState<{ id: string; accessCode: string } | null>(null);
 
@@ -38,6 +39,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
           teacher_name: teacherName,
           word_list: words,
           access_code: accessCode,
+          keyboard_mode: keyboardMode,
         })
         .select()
         .single();
@@ -100,6 +102,26 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg font-mono"
                 required
               />
+            </div>
+
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={keyboardMode}
+                  onChange={(e) => setKeyboardMode(e.target.checked)}
+                  className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <div>
+                  <span className="block text-gray-800 font-semibold mb-1">
+                    Mode clavier complet (différenciation)
+                  </span>
+                  <span className="text-gray-600 text-sm">
+                    Si coché, les élèves devront sélectionner les lettres parmi tout l'alphabet (A-Z) au lieu des lettres mélangées du mot.
+                    Plus difficile, idéal pour complexifier la tâche.
+                  </span>
+                </div>
+              </label>
             </div>
 
             <button
