@@ -117,6 +117,9 @@ export default function StudentGame() {
     newPlaced[index] = null;
     setPlacedLetters(newPlaced);
 
+    setShowIncorrect(false);
+    setIncorrectPositions([]);
+
     if (!session?.keyboard_mode) {
       setAvailableLetters([...availableLetters, letter]);
     }
