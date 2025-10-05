@@ -35,4 +35,5 @@ export interface StudentResult {
   final_score: number;
   completed_at: string;
   duration_seconds: number;
+  challenge_mode: boolean;
 }

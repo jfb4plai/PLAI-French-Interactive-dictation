@@ -141,8 +141,15 @@ export default function TeacherResults() {
                     className="w-full bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-all text-left"
                   >
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-lg text-gray-800">{result.student_name}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-bold text-lg text-gray-800">{result.student_name}</p>
+                          {result.challenge_mode && (
+                            <span className="px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-xs font-semibold">
+                              Défi relevé!
+                            </span>
+                          )}
+                        </div>
                         <p className="text-gray-600">
                           Durée: {formatDuration(result.duration_seconds)}
                         </p>
@@ -161,18 +168,31 @@ export default function TeacherResults() {
           <div>
             {selectedStudent ? (
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                  Détails: {selectedStudent.student_name}
-                </h2>
+                <div className="flex items-center gap-3 mb-4">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Détails: {selectedStudent.student_name}
+                  </h2>
+                  {selectedStudent.challenge_mode && (
+                    <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-sm font-semibold">
+                      Défi relevé!
+                    </span>
+                  )}
+                </div>
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="mb-6">
                     <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Score final:</span>
                       <span className="font-bold text-xl">{selectedStudent.final_score}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between mb-2">
                       <span className="text-gray-600">Durée:</span>
                       <span className="font-bold">{formatDuration(selectedStudent.duration_seconds)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Mode:</span>
+                      <span className="font-bold">
+                        {selectedStudent.challenge_mode ? 'Clavier complet (difficile)' : 'Lettres mélangées (facile)'}
+                      </span>
                     </div>
                   </div>
 

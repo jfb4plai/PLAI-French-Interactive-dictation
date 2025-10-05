@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Volume2, Trophy } from 'lucide-react';
+import { Volume2, Trophy, Award } from 'lucide-react';
 import { supabase, Session, WordAttempt } from '../lib/supabase';
 import { speechService } from '../lib/speech';
 import { shuffleArray } from '../lib/utils';
@@ -24,7 +24,9 @@ export default function StudentGame() {
   const [showIncorrect, setShowIncorrect] = useState(false);
   const [incorrectPositions, setIncorrectPositions] = useState<number[]>([]);
   const [gameComplete, setGameComplete] = useState(false);
-  const [startTime] = useState(Date.now());
+  const [showChallengeOffer, setShowChallengeOffer] = useState(false);
+  const [isPerfectScore, setIsPerfectScore] = useState(false);
+  const [startTime, setStartTime] = useState(Date.now());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -221,7 +223,8 @@ export default function StudentGame() {
   }
 
   async function completeGame() {
-    setGameComplete(true);
+    const perfectScore = attempts.every(attempt => attempt.is_correct && attempt.attempt_number === 1);
+    setIsPerfectScore(perfectScore);
 
     const duration = Math.floor((Date.now() - startTime) / 1000);
 
@@ -232,12 +235,41 @@ export default function StudentGame() {
         attempts: attempts,
         final_score: score,
         duration_seconds: duration,
+        challenge_mode: session?.keyboard_mode || false,
       });
 
-      speechService.speak('Félicitations! Tes résultats ont été envoyés!');
+      if (perfectScore && !session?.keyboard_mode) {
+        setShowChallengeOffer(true);
+        speechService.speak('Parfait! Tu as réussi tous les mots!');
+      } else {
+        setGameComplete(true);
+        speechService.speak('Félicitations! Tes résultats ont été envoyés!');
+      }
     } catch (error) {
       console.error('Error saving results:', error);
+      setGameComplete(true);
     }
+  }
+
+  function handleAcceptChallenge() {
+    setShowChallengeOffer(false);
+    setCurrentWordIndex(0);
+    setScore(0);
+    setAttempts([]);
+    setStartTime(Date.now());
+
+    if (session) {
+      const challengeSession = { ...session, keyboard_mode: true };
+      setSession(challengeSession);
+      const randomizedWords = shuffleArray([...session.word_list]);
+      setShuffledWords(randomizedWords);
+    }
+  }
+
+  function handleDeclineChallenge() {
+    setShowChallengeOffer(false);
+    setGameComplete(true);
+    speechService.speak('Félicitations! Tes résultats ont été envoyés!');
   }
 
   if (loading) {
@@ -246,6 +278,50 @@ export default function StudentGame() {
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-16 w-16 border-4 border-orange-500 border-t-transparent mb-4"></div>
           <p className="text-xl text-gray-700">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (showChallengeOffer) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+          <div className="mb-6">
+            <Award className="w-24 h-24 text-purple-500 mx-auto mb-4 animate-bounce" />
+            <h1 className="text-5xl font-bold text-gray-800 mb-4">Sans faute!</h1>
+            <p className="text-2xl text-gray-600 mb-4">Tu as réussi tous les mots du premier coup!</p>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl p-8 mb-6">
+            <p className="text-white text-xl mb-2">Ton score</p>
+            <p className="text-6xl font-bold text-white">{score}</p>
+          </div>
+
+          <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">Relève le défi!</h2>
+            <p className="text-gray-700 text-lg mb-2">
+              Veux-tu rejouer en <span className="font-bold text-purple-600">mode difficile</span>?
+            </p>
+            <p className="text-gray-600">
+              Tu devras trouver les lettres parmi tout l'alphabet!
+            </p>
+          </div>
+
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={handleAcceptChallenge}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-bold text-lg shadow-lg transform hover:scale-105"
+            >
+              Oui, je relève le défi!
+            </button>
+            <button
+              onClick={handleDeclineChallenge}
+              className="bg-gray-400 text-white px-8 py-4 rounded-lg hover:bg-gray-500 transition-colors font-semibold text-lg"
+            >
+              Non merci
+            </button>
+          </div>
         </div>
       </div>
     );
