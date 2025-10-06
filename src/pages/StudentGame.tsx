@@ -73,7 +73,7 @@ export default function StudentGame() {
     const letters = word.split('');
 
     if (session?.keyboard_mode) {
-      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
       setAvailableLetters(alphabet);
     } else {
       setAvailableLetters(shuffleArray(letters));
@@ -207,7 +207,7 @@ export default function StudentGame() {
     const letters = word.split('');
 
     if (session?.keyboard_mode) {
-      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
       setAvailableLetters(alphabet);
     } else {
       setAvailableLetters(shuffleArray(letters));
