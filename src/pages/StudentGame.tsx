@@ -110,15 +110,14 @@ export default function StudentGame() {
   }
 
   function handlePlacedLetterClick(index: number) {
+    if (showCorrect || showIncorrect) return;
+
     const letter = placedLetters[index];
     if (!letter) return;
 
     const newPlaced = [...placedLetters];
     newPlaced[index] = null;
     setPlacedLetters(newPlaced);
-
-    setShowIncorrect(false);
-    setIncorrectPositions([]);
 
     if (!session?.keyboard_mode) {
       setAvailableLetters([...availableLetters, letter]);
@@ -394,6 +393,7 @@ export default function StudentGame() {
                 <button
                   key={index}
                   onClick={() => handlePlacedLetterClick(index)}
+                  disabled={showCorrect || showIncorrect}
                   className={`w-16 h-16 border-4 rounded-lg text-3xl font-bold flex items-center justify-center transition-all ${
                     showIncorrect && incorrectPositions.includes(index)
                       ? 'border-red-500 bg-red-100 text-red-700 animate-shake'
@@ -402,7 +402,7 @@ export default function StudentGame() {
                       : letter
                       ? 'border-blue-500 bg-blue-50 text-gray-800 hover:bg-blue-100 cursor-pointer'
                       : 'border-gray-300 bg-gray-50'
-                  }`}
+                  } disabled:cursor-not-allowed`}
                 >
                   {letter}
                 </button>

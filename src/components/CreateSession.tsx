@@ -105,14 +105,15 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
             </div>
 
             <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-              <label className="flex items-start gap-3 cursor-pointer">
+              <div className="flex items-start gap-3">
                 <input
                   type="checkbox"
+                  id="keyboardMode"
                   checked={keyboardMode}
                   onChange={(e) => setKeyboardMode(e.target.checked)}
-                  className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                 />
-                <div>
+                <label htmlFor="keyboardMode" className="flex-1 cursor-pointer">
                   <span className="block text-gray-800 font-semibold mb-1">
                     Mode clavier complet (différenciation)
                   </span>
@@ -120,8 +121,8 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                     Si coché, les élèves devront sélectionner les lettres parmi tout l'alphabet (A-Z) au lieu des lettres mélangées du mot.
                     Plus difficile, idéal pour complexifier la tâche.
                   </span>
-                </div>
-              </label>
+                </label>
+              </div>
             </div>
 
             <button
