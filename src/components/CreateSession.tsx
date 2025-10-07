@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { generateAccessCode } from '../lib/utils';
 import SessionCreated from './SessionCreated';
 
@@ -14,6 +15,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
   const [keyboardMode, setKeyboardMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [createdSession, setCreatedSession] = useState<{ id: string; accessCode: string } | null>(null);
+  const { user } = useAuth();
 
   async function handleCreateSession(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +42,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
           word_list: words,
           access_code: accessCode,
           keyboard_mode: keyboardMode,
+          user_id: user?.id,
         })
         .select()
         .single();

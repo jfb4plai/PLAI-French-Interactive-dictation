@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, LogOut, FileText } from 'lucide-react';
 import { supabase, Session } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import CreateSession from '../components/CreateSession';
 
 export default function TeacherDashboard() {
   const [view, setView] = useState<'list' | 'create'>('list');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const { signOut, user } = useAuth();
 
   useEffect(() => {
     loadSessions();
@@ -62,13 +64,22 @@ export default function TeacherDashboard() {
             </Link>
             <h1 className="text-4xl font-bold text-gray-800">Espace Enseignant</h1>
           </div>
-          <button
-            onClick={() => setView('create')}
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg"
-          >
-            <Plus className="w-5 h-5" />
-            Créer une dictée
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setView('create')}
+              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg"
+            >
+              <Plus className="w-5 h-5" />
+              Créer une dictée
+            </button>
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors font-semibold shadow-lg"
+              title="Se déconnecter"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -127,13 +138,22 @@ function SessionCard({ session, getResultsCount }: { session: Session; getResult
             <span>{new Date(session.created_at).toLocaleDateString('fr-FR')}</span>
           </div>
         </div>
-        <Link
-          to={`/enseignant/resultats/${session.id}`}
-          className="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
-        >
-          <Eye className="w-4 h-4" />
-          Voir les résultats
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to={`/enseignant/session/${session.id}`}
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          >
+            <FileText className="w-4 h-4" />
+            Détails
+          </Link>
+          <Link
+            to={`/enseignant/resultats/${session.id}`}
+            className="flex items-center gap-2 bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+          >
+            <Eye className="w-4 h-4" />
+            Résultats
+          </Link>
+        </div>
       </div>
     </div>
   );

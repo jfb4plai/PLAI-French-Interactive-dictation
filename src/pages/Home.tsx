@@ -12,7 +12,7 @@ export default function Home() {
 
         <div className="grid md:grid-cols-2 gap-8">
           <Link
-            to="/enseignant"
+            to="/enseignant/auth"
             className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all transform hover:-translate-y-1"
           >
             <div className="flex flex-col items-center text-center">
