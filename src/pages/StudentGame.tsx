@@ -6,6 +6,12 @@ import { speechService } from '../lib/speech';
 import { shuffleArray } from '../lib/utils';
 import html2canvas from 'html2canvas';
 
+interface WordConfig {
+  word: string;
+  image_url?: string;
+  prefilled_indices?: number[];
+}
+
 export default function StudentGame() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -14,9 +20,10 @@ export default function StudentGame() {
 
   const [session, setSession] = useState<Session | null>(null);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [shuffledWords, setShuffledWords] = useState<string[]>([]);
+  const [shuffledWords, setShuffledWords] = useState<WordConfig[]>([]);
   const [availableLetters, setAvailableLetters] = useState<string[]>([]);
   const [placedLetters, setPlacedLetters] = useState<(string | null)[]>([]);
+  const [currentImage, setCurrentImage] = useState<string | undefined>(undefined);
   const [score, setScore] = useState(0);
   const [attempts, setAttempts] = useState<WordAttempt[]>([]);
   const [attemptCount, setAttemptCount] = useState(0);
@@ -54,7 +61,13 @@ export default function StudentGame() {
       if (error) throw error;
 
       setSession(data);
-      const randomizedWords = shuffleArray([...data.word_list]);
+      const normalizedWords: WordConfig[] = data.word_list.map((item: any) => {
+        if (typeof item === 'string') {
+          return { word: item };
+        }
+        return item as WordConfig;
+      });
+      const randomizedWords = shuffleArray([...normalizedWords]);
       setShuffledWords(randomizedWords);
       setLoading(false);
     } catch (error) {
@@ -69,8 +82,11 @@ export default function StudentGame() {
       return;
     }
 
-    const word = shuffledWords[currentWordIndex];
+    const wordConfig = shuffledWords[currentWordIndex];
+    const word = wordConfig.word;
     const letters = word.split('');
+
+    setCurrentImage(wordConfig.image_url);
 
     if (session?.keyboard_mode) {
       const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -79,7 +95,16 @@ export default function StudentGame() {
       setAvailableLetters(shuffleArray(letters));
     }
 
-    setPlacedLetters(new Array(letters.length).fill(null));
+    const initialPlaced = new Array(letters.length).fill(null);
+    if (wordConfig.prefilled_indices) {
+      wordConfig.prefilled_indices.forEach(index => {
+        if (index < letters.length) {
+          initialPlaced[index] = letters[index];
+        }
+      });
+    }
+
+    setPlacedLetters(initialPlaced);
     setAttemptCount(0);
     setShowCorrect(false);
     setShowIncorrect(false);
@@ -91,7 +116,10 @@ export default function StudentGame() {
   }
 
   function handleLetterClick(letter: string, index: number) {
-    const firstEmpty = placedLetters.findIndex(l => l === null);
+    const wordConfig = shuffledWords[currentWordIndex];
+    const prefilledIndices = wordConfig.prefilled_indices || [];
+
+    const firstEmpty = placedLetters.findIndex((l, idx) => l === null && !prefilledIndices.includes(idx));
     if (firstEmpty === -1) return;
 
     if (!session?.keyboard_mode) {
@@ -104,13 +132,23 @@ export default function StudentGame() {
     newPlaced[firstEmpty] = letter;
     setPlacedLetters(newPlaced);
 
-    if (!newPlaced.includes(null)) {
+    if (session?.pronunciation_mode && newPlaced.filter(l => l !== null).length >= 2) {
+      const currentWord = newPlaced.filter(l => l !== null).join('');
+      speechService.speak(currentWord);
+    }
+
+    const allFilled = newPlaced.every((l, idx) => l !== null || prefilledIndices.includes(idx));
+    if (allFilled) {
       setTimeout(() => checkWord(newPlaced), 300);
     }
   }
 
   function handlePlacedLetterClick(index: number) {
     if (showCorrect || showIncorrect) return;
+
+    const wordConfig = shuffledWords[currentWordIndex];
+    const prefilledIndices = wordConfig.prefilled_indices || [];
+    if (prefilledIndices.includes(index)) return;
 
     const letter = placedLetters[index];
     if (!letter) return;
@@ -125,7 +163,8 @@ export default function StudentGame() {
   }
 
   async function checkWord(word: (string | null)[]) {
-    const currentWord = shuffledWords[currentWordIndex];
+    const wordConfig = shuffledWords[currentWordIndex];
+    const currentWord = wordConfig.word;
     const attempt = word.join('');
 
     await speechService.speak(attempt);
@@ -203,7 +242,8 @@ export default function StudentGame() {
   }
 
   function handleRetry() {
-    const word = shuffledWords[currentWordIndex];
+    const wordConfig = shuffledWords[currentWordIndex];
+    const word = wordConfig.word;
     const letters = word.split('');
 
     if (session?.keyboard_mode) {
@@ -213,7 +253,16 @@ export default function StudentGame() {
       setAvailableLetters(shuffleArray(letters));
     }
 
-    setPlacedLetters(new Array(letters.length).fill(null));
+    const resetPlaced = new Array(letters.length).fill(null);
+    if (wordConfig.prefilled_indices) {
+      wordConfig.prefilled_indices.forEach(index => {
+        if (index < letters.length) {
+          resetPlaced[index] = letters[index];
+        }
+      });
+    }
+
+    setPlacedLetters(resetPlaced);
     setShowIncorrect(false);
     setIncorrectPositions([]);
   }
@@ -221,7 +270,8 @@ export default function StudentGame() {
   function handleRelisten() {
     const penalty = 3;
     setScore(Math.max(0, score - penalty));
-    speechService.speak(shuffledWords[currentWordIndex]);
+    const wordConfig = shuffledWords[currentWordIndex];
+    speechService.speak(wordConfig.word);
   }
 
   async function completeGame() {
@@ -263,7 +313,13 @@ export default function StudentGame() {
     if (session) {
       const challengeSession = { ...session, keyboard_mode: true };
       setSession(challengeSession);
-      const randomizedWords = shuffleArray([...session.word_list]);
+      const normalizedWords: WordConfig[] = session.word_list.map((item: any) => {
+        if (typeof item === 'string') {
+          return { word: item };
+        }
+        return item as WordConfig;
+      });
+      const randomizedWords = shuffleArray([...normalizedWords]);
       setShuffledWords(randomizedWords);
     }
   }
@@ -368,6 +424,15 @@ export default function StudentGame() {
                 Mot {currentWordIndex + 1}/{shuffledWords.length}
               </p>
             </div>
+            {currentImage && (
+              <div className="flex items-center">
+                <img
+                  src={currentImage}
+                  alt="Indice"
+                  className="h-16 w-auto rounded-lg border-2 border-gray-300 shadow-md"
+                />
+              </div>
+            )}
             <div className="text-right">
               <p className="text-gray-600">Score</p>
               <p className="text-4xl font-bold text-orange-600">{score}</p>
@@ -376,6 +441,15 @@ export default function StudentGame() {
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8">
+          {currentImage && (
+            <div className="mb-6 flex justify-center">
+              <img
+                src={currentImage}
+                alt="Indice"
+                className="max-h-48 w-auto rounded-lg border-4 border-blue-300 shadow-lg"
+              />
+            </div>
+          )}
           <div className="mb-6 flex justify-center">
             <button
               onClick={handleRelisten}
@@ -389,24 +463,28 @@ export default function StudentGame() {
           <div id="word-area" className="mb-8">
             <p className="text-center text-gray-600 mb-4 text-lg">Zone de travail</p>
             <div className="flex justify-center gap-2 mb-8 flex-wrap">
-              {placedLetters.map((letter, index) => (
-                <button
-                  key={index}
-                  onClick={() => handlePlacedLetterClick(index)}
-                  disabled={showCorrect || showIncorrect}
-                  className={`w-16 h-16 border-4 rounded-lg text-3xl font-bold flex items-center justify-center transition-all ${
-                    showIncorrect && incorrectPositions.includes(index)
-                      ? 'border-red-500 bg-red-100 text-red-700 animate-shake'
-                      : showCorrect
-                      ? 'border-green-500 bg-green-100 text-green-700'
-                      : letter
-                      ? 'border-blue-500 bg-blue-50 text-gray-800 hover:bg-blue-100 cursor-pointer'
-                      : 'border-gray-300 bg-gray-50'
-                  } disabled:cursor-not-allowed`}
-                >
-                  {letter}
-                </button>
-              ))}
+              {placedLetters.map((letter, index) => {
+                const wordConfig = shuffledWords[currentWordIndex];
+                const isPrefilled = wordConfig?.prefilled_indices?.includes(index);
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handlePlacedLetterClick(index)}
+                    disabled={showCorrect || showIncorrect || isPrefilled}
+                    className={`w-16 h-16 border-4 rounded-lg text-3xl font-bold flex items-center justify-center transition-all ${
+                      showIncorrect && incorrectPositions.includes(index)
+                        ? 'border-red-500 bg-red-100 text-red-700 animate-shake'
+                        : showCorrect
+                        ? 'border-green-500 bg-green-100 text-green-700'
+                        : letter
+                        ? 'border-blue-500 bg-blue-50 text-gray-800 hover:bg-blue-100 cursor-pointer'
+                        : 'border-gray-300 bg-gray-50'
+                    } ${isPrefilled ? 'cursor-not-allowed' : ''} disabled:cursor-not-allowed`}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

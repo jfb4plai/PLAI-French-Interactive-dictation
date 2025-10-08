@@ -12,10 +12,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface Session {
   id: string;
   teacher_name: string;
-  word_list: string[];
+  word_list: any[];
   access_code: string;
   created_at: string;
   keyboard_mode: boolean;
+  pronunciation_mode?: boolean;
 }
 
 export interface WordAttempt {
