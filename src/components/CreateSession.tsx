@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, Link as LinkIcon, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,14 +28,37 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
   const [createdSession, setCreatedSession] = useState<{ id: string; accessCode: string } | null>(null);
   const { user } = useAuth();
 
+  useEffect(() => {
+    if ((enableImages || enablePrefilled) && wordListText.trim()) {
+      parseWordList();
+    }
+  }, [enableImages, enablePrefilled]);
+
   function parseWordList() {
     const words = wordListText
       .split(/[\n,]+/)
       .map(w => w.trim())
       .filter(w => w.length > 0);
 
-    if (words.length !== wordConfigs.length || !enableImages && !enablePrefilled) {
-      setWordConfigs(words.map(word => ({ word })));
+    if (words.length === 0) {
+      setWordConfigs([]);
+      return;
+    }
+
+    if (words.length !== wordConfigs.length) {
+      const newConfigs = words.map((word, index) => {
+        const existingConfig = wordConfigs.find(c => c.word === word);
+        return existingConfig || { word };
+      });
+      setWordConfigs(newConfigs);
+    } else {
+      const updated = words.map((word, index) => {
+        if (wordConfigs[index]?.word === word) {
+          return wordConfigs[index];
+        }
+        return { word };
+      });
+      setWordConfigs(updated);
     }
   }
 
@@ -245,10 +268,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                     type="checkbox"
                     id="enableImages"
                     checked={enableImages}
-                    onChange={(e) => {
-                      setEnableImages(e.target.checked);
-                      if (e.target.checked) parseWordList();
-                    }}
+                    onChange={(e) => setEnableImages(e.target.checked)}
                     className="mt-1 w-5 h-5 text-purple-600 rounded focus:ring-purple-500 cursor-pointer"
                   />
                   <label htmlFor="enableImages" className="flex-1 cursor-pointer">
@@ -268,10 +288,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                     type="checkbox"
                     id="enablePrefilled"
                     checked={enablePrefilled}
-                    onChange={(e) => {
-                      setEnablePrefilled(e.target.checked);
-                      if (e.target.checked) parseWordList();
-                    }}
+                    onChange={(e) => setEnablePrefilled(e.target.checked)}
                     className="mt-1 w-5 h-5 text-orange-600 rounded focus:ring-orange-500 cursor-pointer"
                   />
                   <label htmlFor="enablePrefilled" className="flex-1 cursor-pointer">

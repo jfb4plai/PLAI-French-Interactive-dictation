@@ -493,16 +493,22 @@ export default function StudentGame() {
               {session?.keyboard_mode ? 'Clavier complet' : 'Lettres disponibles'}
             </p>
             <div className={`flex justify-center gap-2 flex-wrap ${session?.keyboard_mode ? 'max-w-2xl mx-auto' : ''}`}>
-              {availableLetters.map((letter, index) => (
-                <button
-                  key={session?.keyboard_mode ? letter : index}
-                  onClick={() => handleLetterClick(letter, index)}
-                  disabled={showCorrect || showIncorrect}
-                  className={`${session?.keyboard_mode ? 'w-12 h-12 text-xl' : 'w-16 h-16 text-3xl'} bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg`}
-                >
-                  {letter}
-                </button>
-              ))}
+              {availableLetters.map((letter, index) => {
+                const isVowel = session?.keyboard_mode && ['a', 'e', 'i', 'o', 'u', 'y'].includes(letter.toLowerCase());
+                const baseColor = isVowel ? 'bg-blue-300' : 'bg-orange-500';
+                const hoverColor = isVowel ? 'hover:bg-blue-400' : 'hover:bg-orange-600';
+
+                return (
+                  <button
+                    key={session?.keyboard_mode ? letter : index}
+                    onClick={() => handleLetterClick(letter, index)}
+                    disabled={showCorrect || showIncorrect}
+                    className={`${session?.keyboard_mode ? 'w-12 h-12 text-xl' : 'w-16 h-16 text-3xl'} ${baseColor} text-white rounded-lg font-bold ${hoverColor} transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg`}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
