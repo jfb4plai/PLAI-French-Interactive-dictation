@@ -88,14 +88,29 @@ export default function StudentGame() {
 
     setCurrentImage(wordConfig.image_url);
 
+    const specialChars = ['-', "'", ' '];
+    const autoPrefilledIndices: number[] = [];
+    letters.forEach((char, idx) => {
+      if (specialChars.includes(char)) {
+        autoPrefilledIndices.push(idx);
+      }
+    });
+
+    const onlyLetters = letters.filter(char => !specialChars.includes(char));
+
     if (session?.keyboard_mode) {
       const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
       setAvailableLetters(alphabet);
     } else {
-      setAvailableLetters(shuffleArray(letters));
+      setAvailableLetters(shuffleArray(onlyLetters));
     }
 
     const initialPlaced = new Array(letters.length).fill(null);
+
+    autoPrefilledIndices.forEach(index => {
+      initialPlaced[index] = letters[index];
+    });
+
     if (wordConfig.prefilled_indices) {
       wordConfig.prefilled_indices.forEach(index => {
         if (index < letters.length) {
@@ -117,9 +132,21 @@ export default function StudentGame() {
 
   function handleLetterClick(letter: string, index: number) {
     const wordConfig = shuffledWords[currentWordIndex];
+    const word = wordConfig.word;
+    const letters = word.split('');
     const prefilledIndices = wordConfig.prefilled_indices || [];
 
-    const firstEmpty = placedLetters.findIndex((l, idx) => l === null && !prefilledIndices.includes(idx));
+    const specialChars = ['-', "'", ' '];
+    const autoPrefilledIndices: number[] = [];
+    letters.forEach((char, idx) => {
+      if (specialChars.includes(char)) {
+        autoPrefilledIndices.push(idx);
+      }
+    });
+
+    const allPrefilledIndices = [...prefilledIndices, ...autoPrefilledIndices];
+
+    const firstEmpty = placedLetters.findIndex((l, idx) => l === null && !allPrefilledIndices.includes(idx));
     if (firstEmpty === -1) return;
 
     if (!session?.keyboard_mode) {
@@ -137,7 +164,7 @@ export default function StudentGame() {
       speechService.speak(currentWord);
     }
 
-    const allFilled = newPlaced.every((l, idx) => l !== null || prefilledIndices.includes(idx));
+    const allFilled = newPlaced.every((l, idx) => l !== null || allPrefilledIndices.includes(idx));
     if (allFilled) {
       setTimeout(() => checkWord(newPlaced), 300);
     }
@@ -147,8 +174,21 @@ export default function StudentGame() {
     if (showCorrect || showIncorrect) return;
 
     const wordConfig = shuffledWords[currentWordIndex];
+    const word = wordConfig.word;
+    const letters = word.split('');
     const prefilledIndices = wordConfig.prefilled_indices || [];
-    if (prefilledIndices.includes(index)) return;
+
+    const specialChars = ['-', "'", ' '];
+    const autoPrefilledIndices: number[] = [];
+    letters.forEach((char, idx) => {
+      if (specialChars.includes(char)) {
+        autoPrefilledIndices.push(idx);
+      }
+    });
+
+    const allPrefilledIndices = [...prefilledIndices, ...autoPrefilledIndices];
+
+    if (allPrefilledIndices.includes(index)) return;
 
     const letter = placedLetters[index];
     if (!letter) return;
@@ -246,14 +286,29 @@ export default function StudentGame() {
     const word = wordConfig.word;
     const letters = word.split('');
 
+    const specialChars = ['-', "'", ' '];
+    const autoPrefilledIndices: number[] = [];
+    letters.forEach((char, idx) => {
+      if (specialChars.includes(char)) {
+        autoPrefilledIndices.push(idx);
+      }
+    });
+
+    const onlyLetters = letters.filter(char => !specialChars.includes(char));
+
     if (session?.keyboard_mode) {
       const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
       setAvailableLetters(alphabet);
     } else {
-      setAvailableLetters(shuffleArray(letters));
+      setAvailableLetters(shuffleArray(onlyLetters));
     }
 
     const resetPlaced = new Array(letters.length).fill(null);
+
+    autoPrefilledIndices.forEach(index => {
+      resetPlaced[index] = letters[index];
+    });
+
     if (wordConfig.prefilled_indices) {
       wordConfig.prefilled_indices.forEach(index => {
         if (index < letters.length) {
@@ -465,7 +520,22 @@ export default function StudentGame() {
             <div className="flex justify-center gap-2 mb-8 flex-wrap">
               {placedLetters.map((letter, index) => {
                 const wordConfig = shuffledWords[currentWordIndex];
-                const isPrefilled = wordConfig?.prefilled_indices?.includes(index);
+                const word = wordConfig.word;
+                const letters = word.split('');
+                const prefilledIndices = wordConfig?.prefilled_indices || [];
+
+                const specialChars = ['-', "'", ' '];
+                const autoPrefilledIndices: number[] = [];
+                letters.forEach((char, idx) => {
+                  if (specialChars.includes(char)) {
+                    autoPrefilledIndices.push(idx);
+                  }
+                });
+
+                const allPrefilledIndices = [...prefilledIndices, ...autoPrefilledIndices];
+                const isPrefilled = allPrefilledIndices.includes(index);
+                const isSpecialChar = letter && specialChars.includes(letter);
+
                 return (
                   <button
                     key={index}
@@ -477,11 +547,13 @@ export default function StudentGame() {
                         : showCorrect
                         ? 'border-green-500 bg-green-100 text-green-700'
                         : letter
-                        ? 'border-blue-500 bg-blue-50 text-gray-800 hover:bg-blue-100 cursor-pointer'
+                        ? isSpecialChar
+                          ? 'border-gray-400 bg-gray-200 text-gray-600 cursor-not-allowed'
+                          : 'border-blue-500 bg-blue-50 text-gray-800 hover:bg-blue-100 cursor-pointer'
                         : 'border-gray-300 bg-gray-50'
                     } ${isPrefilled ? 'cursor-not-allowed' : ''} disabled:cursor-not-allowed`}
                   >
-                    {letter}
+                    {letter === ' ' ? '␣' : letter}
                   </button>
                 );
               })}
