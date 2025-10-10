@@ -330,6 +330,12 @@ export default function StudentGame() {
   }
 
   async function completeGame() {
+    if (attempts.length === 0) {
+      setGameComplete(true);
+      speechService.speak('Félicitations! Tes résultats ont été envoyés!');
+      return;
+    }
+
     const perfectScore = attempts.every(attempt => attempt.is_correct && attempt.attempt_number === 1);
     setIsPerfectScore(perfectScore);
 
@@ -517,7 +523,7 @@ export default function StudentGame() {
 
           <div id="word-area" className="mb-8">
             <p className="text-center text-gray-600 mb-4 text-lg">Zone de travail</p>
-            <div className="flex justify-center gap-2 mb-8 flex-wrap">
+            <div className="flex justify-center gap-2 mb-8 flex-wrap max-w-full px-4">
               {placedLetters.map((letter, index) => {
                 const wordConfig = shuffledWords[currentWordIndex];
                 const word = wordConfig.word;
