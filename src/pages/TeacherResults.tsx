@@ -239,7 +239,7 @@ export default function TeacherResults() {
                                       <img
                                         src={attempt.screenshot}
                                         alt={`Erreur ${idx + 1}`}
-                                        className="w-32 h-auto border-2 border-red-300 rounded cursor-pointer hover:scale-150 transition-transform"
+                                        className="w-[512px] h-auto border-2 border-red-300 rounded cursor-pointer hover:scale-110 transition-transform"
                                         onClick={(e) => {
                                           const img = e.currentTarget;
                                           if (img.style.position === 'fixed') {

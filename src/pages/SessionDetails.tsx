@@ -116,14 +116,38 @@ export default function SessionDetails() {
               <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-lg font-bold">
                 Code: {session.access_code}
               </span>
-              {session.keyboard_mode && (
-                <span className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
-                  Mode clavier complet
-                </span>
-              )}
               <span className="text-gray-600">
                 Créée le {new Date(session.created_at).toLocaleDateString('fr-FR')}
               </span>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <h3 className="w-full text-lg font-semibold text-gray-700 mb-1">Options de la dictée:</h3>
+              {session.keyboard_mode && (
+                <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                  ⌨️ Mode clavier complet
+                </span>
+              )}
+              {session.pronunciation_mode && (
+                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                  🔊 Mode prononciation
+                </span>
+              )}
+              {session.challenge_mode && (
+                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
+                  🏆 Mode défi
+                </span>
+              )}
+              {session.help_mode && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                  💡 Mode aide
+                </span>
+              )}
+              {!session.keyboard_mode && !session.pronunciation_mode && !session.challenge_mode && !session.help_mode && (
+                <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                  Mode standard
+                </span>
+              )}
             </div>
           </div>
 
