@@ -474,9 +474,18 @@ export default function StudentGame() {
     );
   }
 
+  if (currentWordIndex >= shuffledWords.length) {
+    return null;
+  }
+
+  const currentWordConfig = shuffledWords[currentWordIndex];
+  if (!currentWordConfig) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
@@ -485,10 +494,10 @@ export default function StudentGame() {
                 Mot {currentWordIndex + 1}/{shuffledWords.length}
               </p>
             </div>
-            {currentImage && (
+            {currentWordConfig.image_url && (
               <div className="flex items-center">
                 <img
-                  src={currentImage}
+                  src={currentWordConfig.image_url}
                   alt="Indice"
                   className="h-16 w-auto rounded-lg border-2 border-gray-300 shadow-md"
                 />
@@ -502,10 +511,10 @@ export default function StudentGame() {
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8">
-          {currentImage && (
+          {currentWordConfig.image_url && (
             <div className="mb-6 flex justify-center">
               <img
-                src={currentImage}
+                src={currentWordConfig.image_url}
                 alt="Indice"
                 className="max-h-48 w-auto rounded-lg border-4 border-blue-300 shadow-lg"
               />
@@ -523,12 +532,11 @@ export default function StudentGame() {
 
           <div id="word-area" className="mb-8">
             <p className="text-center text-gray-600 mb-4 text-lg">Zone de travail</p>
-            <div className="flex justify-center gap-2 mb-8 flex-wrap max-w-full px-4">
+            <div className="flex justify-center gap-1 mb-8 flex-wrap max-w-full">
               {placedLetters.map((letter, index) => {
-                const wordConfig = shuffledWords[currentWordIndex];
-                const word = wordConfig.word;
+                const word = currentWordConfig.word;
                 const letters = word.split('');
-                const prefilledIndices = wordConfig?.prefilled_indices || [];
+                const prefilledIndices = currentWordConfig.prefilled_indices || [];
 
                 const specialChars = ['-', "'", ' '];
                 const autoPrefilledIndices: number[] = [];
@@ -547,7 +555,7 @@ export default function StudentGame() {
                     key={index}
                     onClick={() => handlePlacedLetterClick(index)}
                     disabled={showCorrect || showIncorrect || isPrefilled}
-                    className={`w-16 h-16 border-4 rounded-lg text-3xl font-bold flex items-center justify-center transition-all ${
+                    className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 border-4 rounded-lg text-2xl sm:text-3xl font-bold flex items-center justify-center transition-all ${
                       showIncorrect && incorrectPositions.includes(index)
                         ? 'border-red-500 bg-red-100 text-red-700 animate-shake'
                         : showCorrect
