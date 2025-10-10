@@ -70,20 +70,27 @@ export default function TeacherResults() {
   const wordStats = calculateWordStats(allAttempts);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Link
-            to="/enseignant"
-            className="p-2 hover:bg-white rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6 text-gray-700" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">
-              Résultats: {session.teacher_name || 'Session'}
-            </h1>
-            <p className="text-gray-600">Code: {session.access_code}</p>
+        <div className="mb-6">
+          <img
+            src="/plai-logo.jpg"
+            alt="PlAI - Pôle Liégeois d'Accompagnement vers une École Inclusive"
+            className="h-16 w-auto object-contain mb-4"
+          />
+          <div className="flex items-center gap-4">
+            <Link
+              to="/enseignant"
+              className="p-2 hover:bg-white rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">
+                Résultats: {session.teacher_name || 'Session'}
+              </h1>
+              <p className="text-gray-600">Code: {session.access_code}</p>
+            </div>
           </div>
         </div>
 

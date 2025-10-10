@@ -51,15 +51,22 @@ export default function TeacherAuth() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 p-4">
       <div className="max-w-md mx-auto">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-6"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          Retour
-        </Link>
+        <div className="mb-6">
+          <img
+            src="/plai-logo.jpg"
+            alt="PlAI - Pôle Liégeois d'Accompagnement vers une École Inclusive"
+            className="h-16 w-auto object-contain mb-4"
+          />
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Retour
+          </Link>
+        </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">

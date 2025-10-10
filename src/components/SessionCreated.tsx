@@ -55,8 +55,13 @@ export default function SessionCreated({ accessCode, onBack }: SessionCreatedPro
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 p-4">
       <div className="max-w-3xl mx-auto">
+        <img
+          src="/plai-logo.jpg"
+          alt="PlAI - Pôle Liégeois d'Accompagnement vers une École Inclusive"
+          className="h-16 w-auto object-contain mb-6"
+        />
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-4">

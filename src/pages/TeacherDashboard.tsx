@@ -52,19 +52,27 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-sky-100 p-4">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/"
-              className="p-2 hover:bg-white rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-6 h-6 text-gray-700" />
-            </Link>
-            <h1 className="text-4xl font-bold text-gray-800">Espace Enseignant</h1>
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <img
+              src="/plai-logo.jpg"
+              alt="PlAI - Pôle Liégeois d'Accompagnement vers une École Inclusive"
+              className="h-16 w-auto object-contain"
+            />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link
+                to="/"
+                className="p-2 hover:bg-white rounded-lg transition-colors"
+              >
+                <ArrowLeft className="w-6 h-6 text-gray-700" />
+              </Link>
+              <h1 className="text-4xl font-bold text-gray-800">Espace Enseignant</h1>
+            </div>
+            <div className="flex items-center gap-3">
             <button
               onClick={() => setView('create')}
               className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg"
@@ -80,6 +88,7 @@ export default function TeacherDashboard() {
               <LogOut className="w-5 h-5" />
             </button>
           </div>
+        </div>
         </div>
 
         {loading ? (
