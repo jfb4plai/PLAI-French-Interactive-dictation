@@ -35,6 +35,7 @@ export default function StudentGame() {
   const [isPerfectScore, setIsPerfectScore] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
   const [loading, setLoading] = useState(true);
+  const [showValidateButton, setShowValidateButton] = useState(false);
 
   useEffect(() => {
     if (!sessionId || !studentName) {
@@ -100,7 +101,19 @@ export default function StudentGame() {
 
     if (session?.keyboard_mode) {
       const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-      setAvailableLetters(alphabet);
+      const accentedLetters = new Set<string>();
+
+      shuffledWords.forEach(wordCfg => {
+        const w = wordCfg.word.toLowerCase();
+        for (const char of w) {
+          if (/[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/.test(char)) {
+            accentedLetters.add(char);
+          }
+        }
+      });
+
+      const fullKeyboard = [...alphabet, ...Array.from(accentedLetters)];
+      setAvailableLetters(fullKeyboard);
     } else {
       setAvailableLetters(shuffleArray(onlyLetters));
     }
@@ -124,6 +137,7 @@ export default function StudentGame() {
     setShowCorrect(false);
     setShowIncorrect(false);
     setIncorrectPositions([]);
+    setShowValidateButton(false);
 
     setTimeout(() => {
       speechService.speak(word);
@@ -166,7 +180,7 @@ export default function StudentGame() {
 
     const allFilled = newPlaced.every((l, idx) => l !== null || allPrefilledIndices.includes(idx));
     if (allFilled) {
-      setTimeout(() => checkWord(newPlaced), 300);
+      setShowValidateButton(true);
     }
   }
 
@@ -200,6 +214,13 @@ export default function StudentGame() {
     if (!session?.keyboard_mode) {
       setAvailableLetters([...availableLetters, letter]);
     }
+
+    setShowValidateButton(false);
+  }
+
+  function handleValidate() {
+    setShowValidateButton(false);
+    checkWord(placedLetters);
   }
 
   async function checkWord(word: (string | null)[]) {
@@ -298,7 +319,19 @@ export default function StudentGame() {
 
     if (session?.keyboard_mode) {
       const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
-      setAvailableLetters(alphabet);
+      const accentedLetters = new Set<string>();
+
+      shuffledWords.forEach(wordCfg => {
+        const w = wordCfg.word.toLowerCase();
+        for (const char of w) {
+          if (/[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/.test(char)) {
+            accentedLetters.add(char);
+          }
+        }
+      });
+
+      const fullKeyboard = [...alphabet, ...Array.from(accentedLetters)];
+      setAvailableLetters(fullKeyboard);
     } else {
       setAvailableLetters(shuffleArray(onlyLetters));
     }
@@ -320,6 +353,7 @@ export default function StudentGame() {
     setPlacedLetters(resetPlaced);
     setShowIncorrect(false);
     setIncorrectPositions([]);
+    setShowValidateButton(false);
   }
 
   function handleRelisten() {
@@ -597,6 +631,17 @@ export default function StudentGame() {
               })}
             </div>
           </div>
+
+          {showValidateButton && !showCorrect && !showIncorrect && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleValidate}
+                className="bg-green-600 text-white px-12 py-4 rounded-lg hover:bg-green-700 transition-colors font-bold text-xl shadow-xl transform hover:scale-105"
+              >
+                Valider ma réponse
+              </button>
+            </div>
+          )}
 
           {showIncorrect && (
             <div className="mt-6 text-center">

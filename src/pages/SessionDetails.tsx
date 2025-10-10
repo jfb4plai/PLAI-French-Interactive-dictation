@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Download, Copy, Check } from 'lucide-react';
 import { supabase, Session } from '../lib/supabase';
 import QRCode from 'qrcode';
 
@@ -9,6 +9,7 @@ export default function SessionDetails() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [copied, setCopied] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -46,6 +47,19 @@ export default function SessionDetails() {
     link.download = `qr-code-${session.access_code}.png`;
     link.href = qrCodeUrl;
     link.click();
+  }
+
+  async function copyLink() {
+    if (!session) return;
+
+    const url = `${window.location.origin}/eleve?code=${session.access_code}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+    }
   }
 
   if (loading) {
@@ -144,13 +158,31 @@ export default function SessionDetails() {
                       className="mx-auto"
                       style={{ width: 300, height: 300 }}
                     />
-                    <button
-                      onClick={downloadQRCode}
-                      className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold mx-auto"
-                    >
-                      <Download className="w-4 h-4" />
-                      Télécharger le QR Code
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={downloadQRCode}
+                        className="flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                      >
+                        <Download className="w-4 h-4" />
+                        Télécharger le QR Code
+                      </button>
+                      <button
+                        onClick={copyLink}
+                        className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            Lien copié!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4" />
+                            Copier le lien
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
