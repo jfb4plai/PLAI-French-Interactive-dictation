@@ -46,18 +46,27 @@ export default function TeacherDashboard() {
     }
 
     try {
-      await supabase
+      const { error: resultsError } = await supabase
         .from('student_results')
         .delete()
         .eq('session_id', sessionId);
 
-      const { error } = await supabase
+      if (resultsError) {
+        console.error('Error deleting results:', resultsError);
+        throw resultsError;
+      }
+
+      const { error: sessionError } = await supabase
         .from('sessions')
         .delete()
         .eq('id', sessionId);
 
-      if (error) throw error;
+      if (sessionError) {
+        console.error('Error deleting session:', sessionError);
+        throw sessionError;
+      }
 
+      alert('Dictée supprimée avec succès !');
       loadSessions();
     } catch (error) {
       console.error('Error deleting session:', error);
