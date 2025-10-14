@@ -6,6 +6,11 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
         <div className="text-center mb-12">
+          <img
+            src="/plai-logo.jpg"
+            alt="PlAI - Pôle Liégeois d'Accompagnement vers une École Inclusive"
+            className="h-24 w-auto object-contain mx-auto mb-6"
+          />
           <h1 className="text-5xl font-bold text-gray-800 mb-4">Dictée Interactive PLAI</h1>
           <p className="text-xl text-gray-600">Application d'apprentissage de l'orthographe</p>
         </div>
