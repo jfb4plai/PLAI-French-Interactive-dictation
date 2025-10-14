@@ -101,9 +101,8 @@ export default function StudentGame() {
 
     if (session?.keyboard_mode) {
       const firstWord = shuffledWords[0].word;
-      const letterCount = firstWord.split('').filter(c => /[a-zA-ZÀ-ÿ]/.test(c)).length;
-      const upperCount = firstWord.split('').filter(c => /[A-ZÀ-Ý]/.test(c)).length;
-      const isUpperCase = upperCount / letterCount >= 0.5;
+      const firstLetter = firstWord.split('').find(c => /[a-zA-ZÀ-ÿ]/.test(c));
+      const isUpperCase = firstLetter ? /[A-ZÀ-Ý]/.test(firstLetter) : false;
 
       const alphabet = isUpperCase
         ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -330,9 +329,8 @@ export default function StudentGame() {
 
     if (session?.keyboard_mode) {
       const firstWord = shuffledWords[0].word;
-      const letterCount = firstWord.split('').filter(c => /[a-zA-ZÀ-ÿ]/.test(c)).length;
-      const upperCount = firstWord.split('').filter(c => /[A-ZÀ-Ý]/.test(c)).length;
-      const isUpperCase = upperCount / letterCount >= 0.5;
+      const firstLetter = firstWord.split('').find(c => /[a-zA-ZÀ-ÿ]/.test(c));
+      const isUpperCase = firstLetter ? /[A-ZÀ-Ý]/.test(firstLetter) : false;
 
       const alphabet = isUpperCase
         ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')

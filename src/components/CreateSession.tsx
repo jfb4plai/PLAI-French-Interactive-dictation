@@ -70,19 +70,26 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
 
     if (words.length === 0) return false;
 
-    const wordCases = words.map(word => {
-      const letterCount = word.split('').filter(c => /[a-zA-ZÀ-ÿ]/.test(c)).length;
-      if (letterCount === 0) return null;
-      const upperCount = word.split('').filter(c => /[A-ZÀ-Ý]/.test(c)).length;
-      return upperCount / letterCount >= 0.5 ? 'upper' : 'lower';
-    }).filter(c => c !== null);
+    const firstWord = words[0];
+    const firstLetter = firstWord.split('').find(c => /[a-zA-ZÀ-ÿ]/.test(c));
 
-    if (wordCases.length === 0) return false;
+    if (!firstLetter) return false;
 
-    const hasUpper = wordCases.includes('upper');
-    const hasLower = wordCases.includes('lower');
+    const expectedCase = /[A-ZÀ-Ý]/.test(firstLetter) ? 'upper' : 'lower';
 
-    return hasUpper && hasLower;
+    for (const word of words) {
+      const firstLetterOfWord = word.split('').find(c => /[a-zA-ZÀ-ÿ]/.test(c));
+      if (!firstLetterOfWord) continue;
+
+      const isUpper = /[A-ZÀ-Ý]/.test(firstLetterOfWord);
+      const wordCase = isUpper ? 'upper' : 'lower';
+
+      if (wordCase !== expectedCase) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   async function handleImageUpload(wordIndex: number, file: File) {
@@ -234,6 +241,11 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                 Liste des mots
                 <span className="text-gray-500 font-normal ml-2">(un mot par ligne ou séparés par des virgules)</span>
               </label>
+              <div className="mb-3 bg-blue-50 border border-blue-300 rounded-lg p-3">
+                <p className="text-blue-800 text-sm">
+                  <strong>ℹ️ Important :</strong> Un exercice ne peut contenir que des mots en <strong>minuscules</strong> (ex: école, élève) OU que des mots en <strong>MAJUSCULES</strong> (ex: ÉCOLE, ÉLÈVE). La première lettre du premier mot détermine le type de clavier.
+                </p>
+              </div>
               <textarea
                 id="wordList"
                 value={wordListText}
@@ -248,10 +260,10 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                 required
               />
               {checkCaseMixing() && (
-                <div className="mt-3 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
-                  <p className="text-yellow-800 font-semibold">⚠️ Attention</p>
-                  <p className="text-yellow-700 text-sm mt-1">
-                    Votre liste mélange des mots en minuscules et en majuscules. Pour un exercice cohérent, utilisez uniquement des <strong>minuscules</strong> (ex: école, élève) ou uniquement des <strong>MAJUSCULES</strong> (ex: ÉCOLE, ÉLÈVE) pour tous les mots.
+                <div className="mt-3 bg-red-50 border-2 border-red-400 rounded-lg p-4">
+                  <p className="text-red-800 font-semibold">❌ Erreur</p>
+                  <p className="text-red-700 text-sm mt-1">
+                    Votre liste mélange des mots en minuscules et en majuscules. Utilisez uniquement des <strong>minuscules</strong> ou uniquement des <strong>MAJUSCULES</strong> pour tous les mots.
                   </p>
                 </div>
               )}
