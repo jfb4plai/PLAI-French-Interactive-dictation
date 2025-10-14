@@ -230,7 +230,7 @@ export default function StudentGame() {
 
     await speechService.speak(attempt);
 
-    const isCorrect = attempt === currentWord;
+    const isCorrect = attempt.toLowerCase() === currentWord.toLowerCase();
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
 
@@ -254,7 +254,7 @@ export default function StudentGame() {
     } else {
       const incorrectPos: number[] = [];
       word.forEach((letter, idx) => {
-        if (letter !== currentWord[idx]) {
+        if (letter?.toLowerCase() !== currentWord[idx]?.toLowerCase()) {
           incorrectPos.push(idx);
         }
       });
