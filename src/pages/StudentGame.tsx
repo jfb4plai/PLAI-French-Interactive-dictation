@@ -100,13 +100,24 @@ export default function StudentGame() {
     const onlyLetters = letters.filter(char => !specialChars.includes(char));
 
     if (session?.keyboard_mode) {
-      const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+      const firstWord = shuffledWords[0].word;
+      const letterCount = firstWord.split('').filter(c => /[a-zA-ZÀ-ÿ]/.test(c)).length;
+      const upperCount = firstWord.split('').filter(c => /[A-ZÀ-Ý]/.test(c)).length;
+      const isUpperCase = upperCount / letterCount >= 0.5;
+
+      const alphabet = isUpperCase
+        ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+        : 'abcdefghijklmnopqrstuvwxyz'.split('');
+
       const accentedLetters = new Set<string>();
 
       shuffledWords.forEach(wordCfg => {
-        const w = wordCfg.word.toLowerCase();
+        const w = isUpperCase ? wordCfg.word.toUpperCase() : wordCfg.word.toLowerCase();
         for (const char of w) {
-          if (/[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/.test(char)) {
+          const accentPattern = isUpperCase
+            ? /[ÀÂÄÁÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜÝŸ]/
+            : /[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/;
+          if (accentPattern.test(char)) {
             accentedLetters.add(char);
           }
         }
@@ -318,13 +329,24 @@ export default function StudentGame() {
     const onlyLetters = letters.filter(char => !specialChars.includes(char));
 
     if (session?.keyboard_mode) {
-      const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+      const firstWord = shuffledWords[0].word;
+      const letterCount = firstWord.split('').filter(c => /[a-zA-ZÀ-ÿ]/.test(c)).length;
+      const upperCount = firstWord.split('').filter(c => /[A-ZÀ-Ý]/.test(c)).length;
+      const isUpperCase = upperCount / letterCount >= 0.5;
+
+      const alphabet = isUpperCase
+        ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+        : 'abcdefghijklmnopqrstuvwxyz'.split('');
+
       const accentedLetters = new Set<string>();
 
       shuffledWords.forEach(wordCfg => {
-        const w = wordCfg.word.toLowerCase();
+        const w = isUpperCase ? wordCfg.word.toUpperCase() : wordCfg.word.toLowerCase();
         for (const char of w) {
-          if (/[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/.test(char)) {
+          const accentPattern = isUpperCase
+            ? /[ÀÂÄÁÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜÝŸ]/
+            : /[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/;
+          if (accentPattern.test(char)) {
             accentedLetters.add(char);
           }
         }

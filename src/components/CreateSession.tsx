@@ -62,6 +62,29 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
     }
   }
 
+  function checkCaseMixing(): boolean {
+    const words = wordListText
+      .split(/[\n,]+/)
+      .map(w => w.trim())
+      .filter(w => w.length > 0);
+
+    if (words.length === 0) return false;
+
+    const wordCases = words.map(word => {
+      const letterCount = word.split('').filter(c => /[a-zA-ZÀ-ÿ]/.test(c)).length;
+      if (letterCount === 0) return null;
+      const upperCount = word.split('').filter(c => /[A-ZÀ-Ý]/.test(c)).length;
+      return upperCount / letterCount >= 0.5 ? 'upper' : 'lower';
+    }).filter(c => c !== null);
+
+    if (wordCases.length === 0) return false;
+
+    const hasUpper = wordCases.includes('upper');
+    const hasLower = wordCases.includes('lower');
+
+    return hasUpper && hasLower;
+  }
+
   async function handleImageUpload(wordIndex: number, file: File) {
     setUploadingImage(wordIndex);
     try {
@@ -224,6 +247,14 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                 className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg font-mono"
                 required
               />
+              {checkCaseMixing() && (
+                <div className="mt-3 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
+                  <p className="text-yellow-800 font-semibold">⚠️ Attention</p>
+                  <p className="text-yellow-700 text-sm mt-1">
+                    Votre liste mélange des mots en minuscules et en majuscules. Pour un exercice cohérent, utilisez uniquement des <strong>minuscules</strong> (ex: école, élève) ou uniquement des <strong>MAJUSCULES</strong> (ex: ÉCOLE, ÉLÈVE) pour tous les mots.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -243,7 +274,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
                       Mode clavier alphabétique complet
                     </span>
                     <span className="text-gray-600 text-sm">
-                      Les élèves devront sélectionner les lettres parmi tout l'alphabet (A-Z) au lieu des lettres mélangées du mot.
+                      Les élèves devront sélectionner les lettres parmi tout l'alphabet (A-Z ou a-z selon la casse de vos mots) au lieu des lettres mélangées du mot.
                     </span>
                   </label>
                 </div>
