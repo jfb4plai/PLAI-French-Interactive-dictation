@@ -11,6 +11,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface Session {
   id: string;
+  title: string;
   teacher_name: string;
   word_list: any[];
   access_code: string;

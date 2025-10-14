@@ -16,6 +16,7 @@ interface WordConfig {
 }
 
 export default function CreateSession({ onBack }: CreateSessionProps) {
+  const [title, setTitle] = useState('');
   const [teacherName, setTeacherName] = useState('');
   const [wordListText, setWordListText] = useState('');
   const [keyboardMode, setKeyboardMode] = useState(false);
@@ -175,6 +176,7 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
       const { data, error } = await supabase
         .from('sessions')
         .insert({
+          title: title,
           teacher_name: teacherName,
           word_list: wordList,
           access_code: accessCode,
@@ -222,6 +224,21 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Créer une nouvelle dictée</h2>
 
           <form onSubmit={handleCreateSession} className="space-y-6">
+            <div>
+              <label htmlFor="title" className="block text-gray-700 font-semibold mb-2">
+                Titre de la dictée
+              </label>
+              <input
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex: Dictée du 14 octobre - Les animaux"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                required
+              />
+            </div>
+
             <div>
               <label htmlFor="teacherName" className="block text-gray-700 font-semibold mb-2">
                 Votre nom (optionnel)

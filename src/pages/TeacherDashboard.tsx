@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Eye, LogOut, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, LogOut, FileText, Trash2 } from 'lucide-react';
 import { supabase, Session } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import CreateSession from '../components/CreateSession';
@@ -38,6 +38,31 @@ export default function TeacherDashboard() {
       .eq('session_id', sessionId);
 
     return count || 0;
+  }
+
+  async function deleteSession(sessionId: string) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette dictée ? Tous les résultats des élèves seront également supprimés.')) {
+      return;
+    }
+
+    try {
+      await supabase
+        .from('student_results')
+        .delete()
+        .eq('session_id', sessionId);
+
+      const { error } = await supabase
+        .from('sessions')
+        .delete()
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      loadSessions();
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      alert('Erreur lors de la suppression de la dictée');
+    }
   }
 
   if (view === 'create') {
@@ -108,7 +133,7 @@ export default function TeacherDashboard() {
         ) : (
           <div className="grid gap-4">
             {sessions.map((session) => (
-              <SessionCard key={session.id} session={session} getResultsCount={getResultsCount} />
+              <SessionCard key={session.id} session={session} getResultsCount={getResultsCount} onDelete={deleteSession} />
             ))}
           </div>
         )}
@@ -117,7 +142,7 @@ export default function TeacherDashboard() {
   );
 }
 
-function SessionCard({ session, getResultsCount }: { session: Session; getResultsCount: (id: string) => Promise<number> }) {
+function SessionCard({ session, getResultsCount, onDelete }: { session: Session; getResultsCount: (id: string) => Promise<number>; onDelete: (id: string) => void }) {
   const [resultsCount, setResultsCount] = useState<number>(0);
 
   useEffect(() => {
@@ -130,7 +155,7 @@ function SessionCard({ session, getResultsCount }: { session: Session; getResult
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="text-xl font-bold text-gray-800">
-              {session.teacher_name || 'Session sans nom'}
+              {session.title || 'Sans titre'}
             </h3>
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
               {session.access_code}
@@ -142,6 +167,7 @@ function SessionCard({ session, getResultsCount }: { session: Session; getResult
             )}
           </div>
           <div className="flex items-center gap-6 text-gray-600">
+            {session.teacher_name && <span>{session.teacher_name}</span>}
             <span>{session.word_list.length} mots</span>
             <span>{resultsCount} élève{resultsCount > 1 ? 's' : ''}</span>
             <span>{new Date(session.created_at).toLocaleDateString('fr-FR')}</span>
@@ -162,6 +188,14 @@ function SessionCard({ session, getResultsCount }: { session: Session; getResult
             <Eye className="w-4 h-4" />
             Résultats
           </Link>
+          <button
+            onClick={() => onDelete(session.id)}
+            className="flex items-center gap-2 bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+            title="Supprimer cette dictée"
+          >
+            <Trash2 className="w-4 h-4" />
+            Supprimer
+          </button>
         </div>
       </div>
     </div>
