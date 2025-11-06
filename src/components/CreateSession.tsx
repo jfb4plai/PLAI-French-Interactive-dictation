@@ -145,6 +145,12 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
     setLoading(true);
 
     try {
+      if (!user?.id) {
+        alert('Vous devez être connecté pour créer une session');
+        setLoading(false);
+        return;
+      }
+
       const words = wordListText
         .split(/[\n,]+/)
         .map(w => w.trim())
@@ -182,17 +188,21 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
           access_code: accessCode,
           keyboard_mode: keyboardMode,
           pronunciation_mode: pronunciationMode,
-          user_id: user?.id,
+          user_id: user.id,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
 
       setCreatedSession({ id: data.id, accessCode: data.access_code });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating session:', error);
-      alert('Erreur lors de la création de la session');
+      const errorMessage = error?.message || 'Erreur inconnue';
+      alert(`Erreur lors de la création de la session: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
