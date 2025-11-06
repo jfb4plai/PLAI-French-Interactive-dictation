@@ -179,6 +179,9 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
 
       const accessCode = generateAccessCode();
 
+      console.log('Creating session with user_id:', user.id);
+      console.log('Word list:', wordList);
+
       const { data, error } = await supabase
         .from('sessions')
         .insert({
@@ -194,15 +197,23 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
         .single();
 
       if (error) {
-        console.error('Database error:', error);
+        console.error('Database error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
         throw error;
       }
 
+      console.log('Session created successfully:', data);
       setCreatedSession({ id: data.id, accessCode: data.access_code });
     } catch (error: any) {
-      console.error('Error creating session:', error);
+      console.error('Full error object:', error);
       const errorMessage = error?.message || 'Erreur inconnue';
-      alert(`Erreur lors de la création de la session: ${errorMessage}`);
+      const errorDetails = error?.details ? `\nDétails: ${error.details}` : '';
+      const errorHint = error?.hint ? `\nSuggestion: ${error.hint}` : '';
+      alert(`Erreur lors de la création de la session: ${errorMessage}${errorDetails}${errorHint}`);
     } finally {
       setLoading(false);
     }
