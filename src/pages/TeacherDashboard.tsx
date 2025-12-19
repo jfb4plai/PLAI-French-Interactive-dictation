@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Plus, Eye, LogOut, FileText, Trash2 } from 'lucide-react';
 import { supabase, Session } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import CreateSession from '../components/CreateSession';
 
 export default function TeacherDashboard() {
-  const [view, setView] = useState<'list' | 'create'>('list');
+  const location = useLocation();
+  const duplicateFrom = location.state?.duplicateFrom as Session | undefined;
+  const [view, setView] = useState<'list' | 'create'>(duplicateFrom ? 'create' : 'list');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const { signOut, user } = useAuth();
@@ -81,6 +83,7 @@ export default function TeacherDashboard() {
           setView('list');
           loadSessions();
         }}
+        initialData={duplicateFrom}
       />
     );
   }

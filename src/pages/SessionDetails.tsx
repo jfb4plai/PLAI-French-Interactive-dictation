@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Download, Copy, Check } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Download, Copy, Check, Files } from 'lucide-react';
 import { supabase, Session } from '../lib/supabase';
 import QRCode from 'qrcode';
 
 export default function SessionDetails() {
   const { sessionId } = useParams();
+  const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -60,6 +61,16 @@ export default function SessionDetails() {
     } catch (error) {
       console.error('Error copying to clipboard:', error);
     }
+  }
+
+  function handleDuplicate() {
+    if (!session) return;
+
+    navigate('/enseignant/dashboard', {
+      state: {
+        duplicateFrom: session
+      }
+    });
   }
 
   if (loading) {
@@ -218,7 +229,14 @@ export default function SessionDetails() {
             </div>
           </div>
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 flex justify-center gap-4">
+            <button
+              onClick={handleDuplicate}
+              className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-lg"
+            >
+              <Files className="w-5 h-5" />
+              Dupliquer cette session
+            </button>
             <Link
               to={`/enseignant/resultats/${session.id}`}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-lg"

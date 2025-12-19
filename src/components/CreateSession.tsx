@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Upload, Link as LinkIcon, X } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, Session } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { generateAccessCode } from '../lib/utils';
 import SessionCreated from './SessionCreated';
 
 interface CreateSessionProps {
   onBack: () => void;
+  initialData?: Session;
 }
 
 interface WordConfig {
@@ -15,7 +16,31 @@ interface WordConfig {
   prefilled_indices?: number[];
 }
 
-export default function CreateSession({ onBack }: CreateSessionProps) {
+function generateNextVersionTitle(originalTitle: string): string {
+  const versionMatch = originalTitle.match(/^(.*?)(?:\s*[-–—]\s*Version\s+(\d+))$/i);
+  if (versionMatch) {
+    const baseName = versionMatch[1].trim();
+    const currentVersion = parseInt(versionMatch[2]);
+    return `${baseName} - Version ${currentVersion + 1}`;
+  }
+
+  const copieMatch = originalTitle.match(/^(.*?)(?:\s*[-–—]\s*Copie\s+(\d+))$/i);
+  if (copieMatch) {
+    const baseName = copieMatch[1].trim();
+    const currentCopy = parseInt(copieMatch[2]);
+    return `${baseName} - Copie ${currentCopy + 1}`;
+  }
+
+  const simpleCopieMatch = originalTitle.match(/^(.*?)(?:\s*[-–—]\s*Copie)$/i);
+  if (simpleCopieMatch) {
+    const baseName = simpleCopieMatch[1].trim();
+    return `${baseName} - Copie 2`;
+  }
+
+  return `${originalTitle} - Version 2`;
+}
+
+export default function CreateSession({ onBack, initialData }: CreateSessionProps) {
   const [title, setTitle] = useState('');
   const [teacherName, setTeacherName] = useState('');
   const [wordListText, setWordListText] = useState('');
@@ -28,6 +53,42 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
   const [uploadingImage, setUploadingImage] = useState<number | null>(null);
   const [createdSession, setCreatedSession] = useState<{ id: string; accessCode: string } | null>(null);
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title ? generateNextVersionTitle(initialData.title) : '');
+      setTeacherName(initialData.teacher_name || '');
+      setKeyboardMode(initialData.keyboard_mode || false);
+      setPronunciationMode(initialData.pronunciation_mode || false);
+
+      const wordList = initialData.word_list;
+      const hasComplexWords = wordList.some((w: any) => typeof w === 'object');
+
+      if (hasComplexWords) {
+        const hasImages = wordList.some((w: any) => w.image_url);
+        const hasPrefilled = wordList.some((w: any) => w.prefilled_indices && w.prefilled_indices.length > 0);
+
+        setEnableImages(hasImages);
+        setEnablePrefilled(hasPrefilled);
+
+        const configs: WordConfig[] = wordList.map((w: any) => {
+          if (typeof w === 'string') {
+            return { word: w };
+          }
+          return {
+            word: w.word,
+            image_url: w.image_url,
+            prefilled_indices: w.prefilled_indices
+          };
+        });
+        setWordConfigs(configs);
+        setWordListText(configs.map(c => c.word).join('\n'));
+      } else {
+        const simpleWords = wordList.map((w: any) => typeof w === 'string' ? w : w.word);
+        setWordListText(simpleWords.join('\n'));
+      }
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if ((enableImages || enablePrefilled) && wordListText.trim()) {
@@ -242,7 +303,20 @@ export default function CreateSession({ onBack }: CreateSessionProps) {
         </div>
 
         <div className="bg-white rounded-xl shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6">Créer une nouvelle dictée</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-6">
+            {initialData ? 'Dupliquer une dictée' : 'Créer une nouvelle dictée'}
+          </h2>
+
+          {initialData && (
+            <div className="mb-6 bg-green-50 border-2 border-green-300 rounded-lg p-4">
+              <p className="text-green-800 font-semibold">
+                Duplication en cours
+              </p>
+              <p className="text-green-700 text-sm mt-1">
+                Les paramètres de la session originale ont été copiés. Vous pouvez les modifier avant de créer la nouvelle version.
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleCreateSession} className="space-y-6">
             <div>
