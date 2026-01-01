@@ -103,7 +103,7 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
   }, [enableImages, enablePrefilled, enableParasiteLetters]);
 
   function generateRandomParasiteLetters(word: string, count: number): string[] {
-    const alphabet = 'abcdefghijklmnopqrstuvwxyzàâäéèêëïîôùûüÿæœç';
+    const alphabet = 'abcdefghijklmnopqrstuvwxyzàâäéèêëïîôùûüÿç';
     const upperAlphabet = alphabet.toUpperCase();
 
     const isUpperCase = /[A-ZÀ-Ý]/.test(word[0]);
