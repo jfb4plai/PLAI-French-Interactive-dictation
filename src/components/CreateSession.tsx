@@ -546,7 +546,25 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
 
             {(enableImages || enablePrefilled || enableParasiteLetters) && wordConfigs.length > 0 && (
               <div className="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Configuration des mots</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">Configuration des mots</h3>
+                  {enableParasiteLetters && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newConfigs = wordConfigs.map(config => ({
+                          ...config,
+                          parasite_letters: generateRandomParasiteLetters(config.word, parasiteLettersCount)
+                        }));
+                        setWordConfigs(newConfigs);
+                      }}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-semibold"
+                    >
+                      <span>🎲</span>
+                      <span>Générer pour tous les mots</span>
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-6">
                   {wordConfigs.map((config, wordIndex) => (
                     <div key={wordIndex} className="bg-white rounded-lg p-4 border-2 border-gray-200">
@@ -634,7 +652,7 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
                       {enableParasiteLetters && (
                         <div className="mt-4">
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Lettres parasites ({parasiteLettersCount} lettre{parasiteLettersCount > 1 ? 's' : ''})
+                            Lettres parasites pour ce mot ({parasiteLettersCount} lettre{parasiteLettersCount > 1 ? 's' : ''})
                           </label>
                           <div className="flex gap-2 items-center">
                             <button
@@ -648,7 +666,7 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
                               className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
                             >
                               <span>🎲</span>
-                              <span className="text-sm">Aléatoire</span>
+                              <span className="text-sm">Ce mot</span>
                             </button>
                             <input
                               type="text"
