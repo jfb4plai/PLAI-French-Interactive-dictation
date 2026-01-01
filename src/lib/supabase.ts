@@ -18,6 +18,8 @@ export interface Session {
   created_at: string;
   keyboard_mode: boolean;
   pronunciation_mode?: boolean;
+  enable_parasite_letters?: boolean;
+  parasite_letters_count?: number;
 }
 
 export interface WordAttempt {

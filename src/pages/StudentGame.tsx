@@ -10,6 +10,7 @@ interface WordConfig {
   word: string;
   image_url?: string;
   prefilled_indices?: number[];
+  parasite_letters?: string[];
 }
 
 export default function StudentGame() {
@@ -125,7 +126,11 @@ export default function StudentGame() {
       const fullKeyboard = [...alphabet, ...Array.from(accentedLetters)];
       setAvailableLetters(fullKeyboard);
     } else {
-      setAvailableLetters(shuffleArray(onlyLetters));
+      let lettersPool = [...onlyLetters];
+      if (session?.enable_parasite_letters && wordConfig.parasite_letters && wordConfig.parasite_letters.length > 0) {
+        lettersPool = [...lettersPool, ...wordConfig.parasite_letters];
+      }
+      setAvailableLetters(shuffleArray(lettersPool));
     }
 
     const initialPlaced = new Array(letters.length).fill(null);
@@ -353,7 +358,11 @@ export default function StudentGame() {
       const fullKeyboard = [...alphabet, ...Array.from(accentedLetters)];
       setAvailableLetters(fullKeyboard);
     } else {
-      setAvailableLetters(shuffleArray(onlyLetters));
+      let lettersPool = [...onlyLetters];
+      if (session?.enable_parasite_letters && wordConfig.parasite_letters && wordConfig.parasite_letters.length > 0) {
+        lettersPool = [...lettersPool, ...wordConfig.parasite_letters];
+      }
+      setAvailableLetters(shuffleArray(lettersPool));
     }
 
     const resetPlaced = new Array(letters.length).fill(null);

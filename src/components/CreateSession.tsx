@@ -14,6 +14,7 @@ interface WordConfig {
   word: string;
   image_url?: string;
   prefilled_indices?: number[];
+  parasite_letters?: string[];
 }
 
 function generateNextVersionTitle(originalTitle: string): string {
@@ -48,6 +49,8 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
   const [pronunciationMode, setPronunciationMode] = useState(false);
   const [enableImages, setEnableImages] = useState(false);
   const [enablePrefilled, setEnablePrefilled] = useState(false);
+  const [enableParasiteLetters, setEnableParasiteLetters] = useState(false);
+  const [parasiteLettersCount, setParasiteLettersCount] = useState(1);
   const [wordConfigs, setWordConfigs] = useState<WordConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState<number | null>(null);
@@ -60,6 +63,8 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
       setTeacherName(initialData.teacher_name || '');
       setKeyboardMode(initialData.keyboard_mode || false);
       setPronunciationMode(initialData.pronunciation_mode || false);
+      setEnableParasiteLetters(initialData.enable_parasite_letters || false);
+      setParasiteLettersCount(initialData.parasite_letters_count || 1);
 
       const wordList = initialData.word_list;
       const hasComplexWords = wordList.some((w: any) => typeof w === 'object');
@@ -78,7 +83,8 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
           return {
             word: w.word,
             image_url: w.image_url,
-            prefilled_indices: w.prefilled_indices
+            prefilled_indices: w.prefilled_indices,
+            parasite_letters: w.parasite_letters
           };
         });
         setWordConfigs(configs);
@@ -91,10 +97,32 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
   }, [initialData]);
 
   useEffect(() => {
-    if ((enableImages || enablePrefilled) && wordListText.trim()) {
+    if ((enableImages || enablePrefilled || enableParasiteLetters) && wordListText.trim()) {
       parseWordList();
     }
-  }, [enableImages, enablePrefilled]);
+  }, [enableImages, enablePrefilled, enableParasiteLetters]);
+
+  function generateRandomParasiteLetters(word: string, count: number): string[] {
+    const alphabet = 'abcdefghijklmnopqrstuvwxyzàâäéèêëïîôùûüÿæœç';
+    const upperAlphabet = alphabet.toUpperCase();
+
+    const isUpperCase = /[A-ZÀ-Ý]/.test(word[0]);
+    const availableLetters = isUpperCase ? upperAlphabet : alphabet;
+
+    const wordLetters = word.toLowerCase().split('');
+    const parasiteLetters: string[] = [];
+
+    while (parasiteLetters.length < count) {
+      const randomIndex = Math.floor(Math.random() * availableLetters.length);
+      const letter = availableLetters[randomIndex];
+
+      if (!wordLetters.includes(letter.toLowerCase())) {
+        parasiteLetters.push(letter);
+      }
+    }
+
+    return parasiteLetters;
+  }
 
   function parseWordList() {
     const words = wordListText
@@ -225,7 +253,7 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
 
       let wordList: any[] = words;
 
-      if (enableImages || enablePrefilled) {
+      if (enableImages || enablePrefilled || enableParasiteLetters) {
         wordList = wordConfigs.map((config, index) => {
           const result: any = { word: config.word };
           if (enableImages && config.image_url) {
@@ -233,6 +261,9 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
           }
           if (enablePrefilled && config.prefilled_indices && config.prefilled_indices.length > 0) {
             result.prefilled_indices = config.prefilled_indices;
+          }
+          if (enableParasiteLetters && config.parasite_letters && config.parasite_letters.length > 0) {
+            result.parasite_letters = config.parasite_letters;
           }
           return result;
         });
@@ -252,6 +283,8 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
           access_code: accessCode,
           keyboard_mode: keyboardMode,
           pronunciation_mode: pronunciationMode,
+          enable_parasite_letters: enableParasiteLetters,
+          parasite_letters_count: parasiteLettersCount,
           user_id: user.id,
         })
         .select()
@@ -390,7 +423,12 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
                     type="checkbox"
                     id="keyboardMode"
                     checked={keyboardMode}
-                    onChange={(e) => setKeyboardMode(e.target.checked)}
+                    onChange={(e) => {
+                      setKeyboardMode(e.target.checked);
+                      if (e.target.checked) {
+                        setEnableParasiteLetters(false);
+                      }
+                    }}
                     className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                   />
                   <label htmlFor="keyboardMode" className="flex-1 cursor-pointer">
@@ -463,9 +501,50 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
                   </label>
                 </div>
               </div>
+
+              <div className={`border-2 rounded-lg p-4 ${keyboardMode ? 'bg-gray-100 border-gray-300' : 'bg-red-50 border-red-200'}`}>
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="enableParasiteLetters"
+                    checked={enableParasiteLetters}
+                    disabled={keyboardMode}
+                    onChange={(e) => {
+                      setEnableParasiteLetters(e.target.checked);
+                    }}
+                    className={`mt-1 w-5 h-5 rounded focus:ring-red-500 ${keyboardMode ? 'cursor-not-allowed opacity-50' : 'text-red-600 cursor-pointer'}`}
+                  />
+                  <label htmlFor="enableParasiteLetters" className={`flex-1 ${keyboardMode ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                    <span className={`block font-semibold mb-1 ${keyboardMode ? 'text-gray-500' : 'text-gray-800'}`}>
+                      Lettres parasites
+                    </span>
+                    <span className={`text-sm ${keyboardMode ? 'text-gray-500' : 'text-gray-600'}`}>
+                      Ajoutez des lettres qui ne font pas partie du mot pour augmenter la difficulté.
+                      {keyboardMode && <span className="block mt-1 font-semibold text-gray-600">⚠️ Désactivé en mode clavier alphabétique complet</span>}
+                    </span>
+                    {enableParasiteLetters && !keyboardMode && (
+                      <div className="mt-3">
+                        <label htmlFor="parasiteLettersCount" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Nombre de lettres parasites
+                        </label>
+                        <select
+                          id="parasiteLettersCount"
+                          value={parasiteLettersCount}
+                          onChange={(e) => setParasiteLettersCount(parseInt(e.target.value))}
+                          className="px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none"
+                        >
+                          <option value={1}>1 lettre</option>
+                          <option value={2}>2 lettres</option>
+                          <option value={3}>3 lettres</option>
+                        </select>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
             </div>
 
-            {(enableImages || enablePrefilled) && wordConfigs.length > 0 && (
+            {(enableImages || enablePrefilled || enableParasiteLetters) && wordConfigs.length > 0 && (
               <div className="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Configuration des mots</h3>
                 <div className="space-y-6">
@@ -549,6 +628,51 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
                               );
                             })}
                           </div>
+                        </div>
+                      )}
+
+                      {enableParasiteLetters && (
+                        <div className="mt-4">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Lettres parasites ({parasiteLettersCount} lettre{parasiteLettersCount > 1 ? 's' : ''})
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const randomLetters = generateRandomParasiteLetters(config.word, parasiteLettersCount);
+                                const newConfigs = [...wordConfigs];
+                                newConfigs[wordIndex].parasite_letters = randomLetters;
+                                setWordConfigs(newConfigs);
+                              }}
+                              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                            >
+                              <span>🎲</span>
+                              <span className="text-sm">Aléatoire</span>
+                            </button>
+                            <input
+                              type="text"
+                              placeholder={`Entrez ${parasiteLettersCount} lettre${parasiteLettersCount > 1 ? 's' : ''}`}
+                              value={config.parasite_letters?.join('') || ''}
+                              onChange={(e) => {
+                                const letters = e.target.value.split('').slice(0, parasiteLettersCount);
+                                const newConfigs = [...wordConfigs];
+                                newConfigs[wordIndex].parasite_letters = letters;
+                                setWordConfigs(newConfigs);
+                              }}
+                              maxLength={parasiteLettersCount}
+                              className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none text-sm"
+                            />
+                          </div>
+                          {config.parasite_letters && config.parasite_letters.length > 0 && (
+                            <div className="mt-2 flex gap-2">
+                              {config.parasite_letters.map((letter, idx) => (
+                                <div key={idx} className="w-10 h-10 rounded-lg bg-red-100 border-2 border-red-400 flex items-center justify-center font-bold text-lg text-red-700">
+                                  {letter}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
