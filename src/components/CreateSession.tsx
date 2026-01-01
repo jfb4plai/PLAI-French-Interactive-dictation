@@ -103,21 +103,102 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
   }, [enableImages, enablePrefilled, enableParasiteLetters]);
 
   function generateRandomParasiteLetters(word: string, count: number): string[] {
-    const alphabet = 'abcdefghijklmnopqrstuvwxyzàâäéèêëïîôùûüÿç';
-    const upperAlphabet = alphabet.toUpperCase();
-
+    const wordLower = word.toLowerCase();
     const isUpperCase = /[A-ZÀ-Ý]/.test(word[0]);
-    const availableLetters = isUpperCase ? upperAlphabet : alphabet;
+    const wordLetters = wordLower.split('');
+    const lastLetter = wordLower[wordLower.length - 1];
+    const lastTwoLetters = wordLower.slice(-2);
 
-    const wordLetters = word.toLowerCase().split('');
+    const candidates: string[] = [];
+
+    if (!wordLower.endsWith('e') && /[bdgklmnprstvz]$/.test(wordLower)) {
+      candidates.push('e');
+    }
+    if (!wordLower.endsWith('s') && !/s$/.test(wordLower)) {
+      candidates.push('s');
+    }
+    if (!wordLower.endsWith('t') && /[an]$/.test(wordLower)) {
+      candidates.push('t');
+    }
+    if (!wordLower.endsWith('x') && /[eau]$/.test(wordLower)) {
+      candidates.push('x');
+    }
+
+    const vowelVariations: { [key: string]: string[] } = {
+      'a': ['à', 'â'],
+      'e': ['é', 'è', 'ê'],
+      'i': ['î', 'ï'],
+      'o': ['ô'],
+      'u': ['ù', 'û', 'ü']
+    };
+
+    for (const [base, variants] of Object.entries(vowelVariations)) {
+      if (wordLower.includes(base)) {
+        variants.forEach(v => {
+          if (!wordLower.includes(v)) candidates.push(v);
+        });
+      }
+    }
+
+    const consonantDoubles: { [key: string]: string } = {
+      'l': 'll', 'm': 'mm', 'n': 'nn', 'p': 'pp',
+      't': 'tt', 'f': 'ff', 's': 'ss', 'r': 'rr'
+    };
+
+    for (const [single, double] of Object.entries(consonantDoubles)) {
+      if (wordLower.includes(single) && !wordLower.includes(double)) {
+        candidates.push(single);
+      }
+    }
+
+    const phoneticallyClose: { [key: string]: string[] } = {
+      'c': ['k', 'q'],
+      'k': ['c', 'q'],
+      'qu': ['c', 'k'],
+      's': ['c', 'z'],
+      'z': ['s'],
+      'f': ['ph'],
+      'g': ['j'],
+      'j': ['g']
+    };
+
+    for (const [pattern, alternatives] of Object.entries(phoneticallyClose)) {
+      if (wordLower.includes(pattern)) {
+        alternatives.forEach(alt => {
+          if (!wordLower.includes(alt) && alt.length === 1) {
+            candidates.push(alt);
+          }
+        });
+      }
+    }
+
+    if (wordLower.includes('an') && !wordLower.includes('en')) {
+      candidates.push('e', 'n');
+    }
+    if (wordLower.includes('en') && !wordLower.includes('an')) {
+      candidates.push('a', 'n');
+    }
+    if (wordLower.includes('on') && !wordLower.includes('om')) {
+      candidates.push('m');
+    }
+
+    const uniqueCandidates = [...new Set(candidates)].filter(
+      letter => !wordLetters.includes(letter.toLowerCase())
+    );
+
     const parasiteLetters: string[] = [];
+    const shuffled = uniqueCandidates.sort(() => Math.random() - 0.5);
+
+    for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+      const letter = isUpperCase ? shuffled[i].toUpperCase() : shuffled[i];
+      parasiteLetters.push(letter);
+    }
 
     while (parasiteLetters.length < count) {
-      const randomIndex = Math.floor(Math.random() * availableLetters.length);
-      const letter = availableLetters[randomIndex];
-
-      if (!wordLetters.includes(letter.toLowerCase())) {
-        parasiteLetters.push(letter);
+      const fallbackAlphabet = 'bcdfghjklmnpqrstvwxyz';
+      const randomLetter = fallbackAlphabet[Math.floor(Math.random() * fallbackAlphabet.length)];
+      if (!wordLetters.includes(randomLetter) && !parasiteLetters.includes(randomLetter)) {
+        parasiteLetters.push(isUpperCase ? randomLetter.toUpperCase() : randomLetter);
       }
     }
 
