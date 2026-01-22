@@ -539,6 +539,9 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
                     <span className="text-gray-600 text-sm">
                       Le mot sera prononcé lettre par lettre dès la 2ème lettre tapée, uniquement à l'ajout de lettres.
                     </span>
+                    <span className="block text-amber-700 font-medium text-sm mt-2 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                      ⚠️ Ne sélectionner cette option uniquement si l'élève maîtrise le décodage en lecture
+                    </span>
                   </label>
                 </div>
               </div>
