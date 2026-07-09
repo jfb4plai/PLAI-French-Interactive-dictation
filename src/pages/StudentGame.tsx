@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Volume2, Trophy, Award } from 'lucide-react';
 import { supabase, Session, WordAttempt } from '../lib/supabase';
@@ -11,6 +11,58 @@ interface WordConfig {
   image_url?: string;
   prefilled_indices?: number[];
   parasite_letters?: string[];
+}
+
+const SPECIAL_CHARS = ['-', "'", ' '];
+
+function getAllPrefilledIndices(wordConfig: WordConfig): number[] {
+  const autoPrefilledIndices: number[] = [];
+  wordConfig.word.split('').forEach((char, idx) => {
+    if (SPECIAL_CHARS.includes(char)) {
+      autoPrefilledIndices.push(idx);
+    }
+  });
+  return [...(wordConfig.prefilled_indices || []), ...autoPrefilledIndices];
+}
+
+function buildAvailableLetters(
+  wordConfig: WordConfig,
+  session: Session | null,
+  shuffledWords: WordConfig[]
+): string[] {
+  const onlyLetters = wordConfig.word.split('').filter(char => !SPECIAL_CHARS.includes(char));
+
+  if (session?.keyboard_mode) {
+    const firstWord = shuffledWords[0].word;
+    const firstLetter = firstWord.split('').find(c => /[a-zA-ZÀ-ÿ]/.test(c));
+    const isUpperCase = firstLetter ? /[A-ZÀ-Ý]/.test(firstLetter) : false;
+
+    const alphabet = isUpperCase
+      ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+      : 'abcdefghijklmnopqrstuvwxyz'.split('');
+
+    const accentedLetters = new Set<string>();
+
+    shuffledWords.forEach(wordCfg => {
+      const w = isUpperCase ? wordCfg.word.toUpperCase() : wordCfg.word.toLowerCase();
+      for (const char of w) {
+        const accentPattern = isUpperCase
+          ? /[ÀÂÄÁÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜÝŸ]/
+          : /[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/;
+        if (accentPattern.test(char)) {
+          accentedLetters.add(char);
+        }
+      }
+    });
+
+    return [...alphabet, ...Array.from(accentedLetters)];
+  }
+
+  let lettersPool = [...onlyLetters];
+  if (session?.enable_parasite_letters && wordConfig.parasite_letters && wordConfig.parasite_letters.length > 0) {
+    lettersPool = [...lettersPool, ...wordConfig.parasite_letters];
+  }
+  return shuffleArray(lettersPool);
 }
 
 export default function StudentGame() {
@@ -38,6 +90,9 @@ export default function StudentGame() {
   const [loading, setLoading] = useState(true);
   const [showValidateButton, setShowValidateButton] = useState(false);
 
+  const incorrectHideTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const nextWordTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
   useEffect(() => {
     if (!sessionId || !studentName) {
       navigate('/eleve');
@@ -51,6 +106,13 @@ export default function StudentGame() {
       startWord();
     }
   }, [currentWordIndex, shuffledWords]);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(incorrectHideTimeoutRef.current);
+      clearTimeout(nextWordTimeoutRef.current);
+    };
+  }, []);
 
   async function loadSession() {
     try {
@@ -90,62 +152,16 @@ export default function StudentGame() {
 
     setCurrentImage(wordConfig.image_url);
 
-    const specialChars = ['-', "'", ' '];
-    const autoPrefilledIndices: number[] = [];
-    letters.forEach((char, idx) => {
-      if (specialChars.includes(char)) {
-        autoPrefilledIndices.push(idx);
-      }
-    });
+    const allPrefilledIndices = getAllPrefilledIndices(wordConfig);
 
-    const onlyLetters = letters.filter(char => !specialChars.includes(char));
-
-    if (session?.keyboard_mode) {
-      const firstWord = shuffledWords[0].word;
-      const firstLetter = firstWord.split('').find(c => /[a-zA-ZÀ-ÿ]/.test(c));
-      const isUpperCase = firstLetter ? /[A-ZÀ-Ý]/.test(firstLetter) : false;
-
-      const alphabet = isUpperCase
-        ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-        : 'abcdefghijklmnopqrstuvwxyz'.split('');
-
-      const accentedLetters = new Set<string>();
-
-      shuffledWords.forEach(wordCfg => {
-        const w = isUpperCase ? wordCfg.word.toUpperCase() : wordCfg.word.toLowerCase();
-        for (const char of w) {
-          const accentPattern = isUpperCase
-            ? /[ÀÂÄÁÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜÝŸ]/
-            : /[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/;
-          if (accentPattern.test(char)) {
-            accentedLetters.add(char);
-          }
-        }
-      });
-
-      const fullKeyboard = [...alphabet, ...Array.from(accentedLetters)];
-      setAvailableLetters(fullKeyboard);
-    } else {
-      let lettersPool = [...onlyLetters];
-      if (session?.enable_parasite_letters && wordConfig.parasite_letters && wordConfig.parasite_letters.length > 0) {
-        lettersPool = [...lettersPool, ...wordConfig.parasite_letters];
-      }
-      setAvailableLetters(shuffleArray(lettersPool));
-    }
+    setAvailableLetters(buildAvailableLetters(wordConfig, session, shuffledWords));
 
     const initialPlaced = new Array(letters.length).fill(null);
-
-    autoPrefilledIndices.forEach(index => {
-      initialPlaced[index] = letters[index];
+    allPrefilledIndices.forEach(index => {
+      if (index < letters.length) {
+        initialPlaced[index] = letters[index];
+      }
     });
-
-    if (wordConfig.prefilled_indices) {
-      wordConfig.prefilled_indices.forEach(index => {
-        if (index < letters.length) {
-          initialPlaced[index] = letters[index];
-        }
-      });
-    }
 
     setPlacedLetters(initialPlaced);
     setAttemptCount(0);
@@ -153,6 +169,8 @@ export default function StudentGame() {
     setShowIncorrect(false);
     setIncorrectPositions([]);
     setShowValidateButton(false);
+    clearTimeout(incorrectHideTimeoutRef.current);
+    clearTimeout(nextWordTimeoutRef.current);
 
     setTimeout(() => {
       speechService.speak(word);
@@ -161,19 +179,7 @@ export default function StudentGame() {
 
   function handleLetterClick(letter: string, index: number) {
     const wordConfig = shuffledWords[currentWordIndex];
-    const word = wordConfig.word;
-    const letters = word.split('');
-    const prefilledIndices = wordConfig.prefilled_indices || [];
-
-    const specialChars = ['-', "'", ' '];
-    const autoPrefilledIndices: number[] = [];
-    letters.forEach((char, idx) => {
-      if (specialChars.includes(char)) {
-        autoPrefilledIndices.push(idx);
-      }
-    });
-
-    const allPrefilledIndices = [...prefilledIndices, ...autoPrefilledIndices];
+    const allPrefilledIndices = getAllPrefilledIndices(wordConfig);
 
     const firstEmpty = placedLetters.findIndex((l, idx) => l === null && !allPrefilledIndices.includes(idx));
     if (firstEmpty === -1) return;
@@ -203,19 +209,7 @@ export default function StudentGame() {
     if (showCorrect || showIncorrect) return;
 
     const wordConfig = shuffledWords[currentWordIndex];
-    const word = wordConfig.word;
-    const letters = word.split('');
-    const prefilledIndices = wordConfig.prefilled_indices || [];
-
-    const specialChars = ['-', "'", ' '];
-    const autoPrefilledIndices: number[] = [];
-    letters.forEach((char, idx) => {
-      if (specialChars.includes(char)) {
-        autoPrefilledIndices.push(idx);
-      }
-    });
-
-    const allPrefilledIndices = [...prefilledIndices, ...autoPrefilledIndices];
+    const allPrefilledIndices = getAllPrefilledIndices(wordConfig);
 
     if (allPrefilledIndices.includes(index)) return;
 
@@ -238,17 +232,17 @@ export default function StudentGame() {
     checkWord(placedLetters);
   }
 
-  async function checkWord(word: (string | null)[]) {
+  function checkWord(word: (string | null)[]) {
     const wordConfig = shuffledWords[currentWordIndex];
     const currentWord = wordConfig.word;
     const attempt = word.join('');
-
-    await speechService.speak(attempt);
-
     const isCorrect = attempt.toLowerCase() === currentWord.toLowerCase();
     const newAttemptCount = attemptCount + 1;
     setAttemptCount(newAttemptCount);
 
+    // Show correct/incorrect state the instant the student validates, before
+    // any speech plays. Waiting on speechService.speak() here used to freeze
+    // the screen for as long as the readback took, with no feedback at all.
     if (isCorrect) {
       const points = 20;
       setScore(score + points);
@@ -261,11 +255,12 @@ export default function StudentGame() {
         is_correct: true,
         points: points,
       };
-      setAttempts([...attempts, wordAttempt]);
+      setAttempts(prev => [...prev, wordAttempt]);
 
-      setTimeout(() => {
-        setCurrentWordIndex(currentWordIndex + 1);
-      }, 3000);
+      speechService.speak(attempt);
+
+      clearTimeout(nextWordTimeoutRef.current);
+      nextWordTimeoutRef.current = setTimeout(goToNextWord, 3000);
     } else {
       const incorrectPos: number[] = [];
       word.forEach((letter, idx) => {
@@ -280,14 +275,23 @@ export default function StudentGame() {
       const points = -5;
       setScore(Math.max(0, score + points));
 
-      await captureScreenshot(word, currentWord, newAttemptCount);
+      // Screenshot and speech run independently: neither should delay the
+      // other, and neither delays the visual feedback already shown above.
+      captureScreenshot(word, currentWord, newAttemptCount);
+      speechService.speak(attempt).then(() => {
+        speechService.speak("Ce n'est pas correct, réessaie!");
+      });
 
-      speechService.speak("Ce n'est pas correct, réessaie!");
-
-      setTimeout(() => {
-        setShowIncorrect(false);
-      }, 2000);
+      // If the student doesn't tap "Réessayer" in time, auto-retry rather
+      // than leaving the wrong letters on screen with no active button.
+      clearTimeout(incorrectHideTimeoutRef.current);
+      incorrectHideTimeoutRef.current = setTimeout(handleRetry, 2000);
     }
+  }
+
+  function goToNextWord() {
+    clearTimeout(nextWordTimeoutRef.current);
+    setCurrentWordIndex(currentWordIndex + 1);
   }
 
   async function captureScreenshot(word: (string | null)[], correctWord: string, attemptNum: number) {
@@ -311,7 +315,7 @@ export default function StudentGame() {
         points: -5,
       };
 
-      setAttempts([...attempts, wordAttempt]);
+      setAttempts(prev => [...prev, wordAttempt]);
     } catch (error) {
       console.error('Error capturing screenshot:', error);
     }
@@ -319,70 +323,23 @@ export default function StudentGame() {
 
   function handleRetry() {
     const wordConfig = shuffledWords[currentWordIndex];
-    const word = wordConfig.word;
-    const letters = word.split('');
+    const letters = wordConfig.word.split('');
+    const allPrefilledIndices = getAllPrefilledIndices(wordConfig);
 
-    const specialChars = ['-', "'", ' '];
-    const autoPrefilledIndices: number[] = [];
-    letters.forEach((char, idx) => {
-      if (specialChars.includes(char)) {
-        autoPrefilledIndices.push(idx);
-      }
-    });
-
-    const onlyLetters = letters.filter(char => !specialChars.includes(char));
-
-    if (session?.keyboard_mode) {
-      const firstWord = shuffledWords[0].word;
-      const firstLetter = firstWord.split('').find(c => /[a-zA-ZÀ-ÿ]/.test(c));
-      const isUpperCase = firstLetter ? /[A-ZÀ-Ý]/.test(firstLetter) : false;
-
-      const alphabet = isUpperCase
-        ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
-        : 'abcdefghijklmnopqrstuvwxyz'.split('');
-
-      const accentedLetters = new Set<string>();
-
-      shuffledWords.forEach(wordCfg => {
-        const w = isUpperCase ? wordCfg.word.toUpperCase() : wordCfg.word.toLowerCase();
-        for (const char of w) {
-          const accentPattern = isUpperCase
-            ? /[ÀÂÄÁÃÅÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕØŒÚÙÛÜÝŸ]/
-            : /[àâäáãåæçéèêëíìîïñóòôöõøœúùûüýÿ]/;
-          if (accentPattern.test(char)) {
-            accentedLetters.add(char);
-          }
-        }
-      });
-
-      const fullKeyboard = [...alphabet, ...Array.from(accentedLetters)];
-      setAvailableLetters(fullKeyboard);
-    } else {
-      let lettersPool = [...onlyLetters];
-      if (session?.enable_parasite_letters && wordConfig.parasite_letters && wordConfig.parasite_letters.length > 0) {
-        lettersPool = [...lettersPool, ...wordConfig.parasite_letters];
-      }
-      setAvailableLetters(shuffleArray(lettersPool));
-    }
+    setAvailableLetters(buildAvailableLetters(wordConfig, session, shuffledWords));
 
     const resetPlaced = new Array(letters.length).fill(null);
-
-    autoPrefilledIndices.forEach(index => {
-      resetPlaced[index] = letters[index];
+    allPrefilledIndices.forEach(index => {
+      if (index < letters.length) {
+        resetPlaced[index] = letters[index];
+      }
     });
-
-    if (wordConfig.prefilled_indices) {
-      wordConfig.prefilled_indices.forEach(index => {
-        if (index < letters.length) {
-          resetPlaced[index] = letters[index];
-        }
-      });
-    }
 
     setPlacedLetters(resetPlaced);
     setShowIncorrect(false);
     setIncorrectPositions([]);
     setShowValidateButton(false);
+    clearTimeout(incorrectHideTimeoutRef.current);
   }
 
   function handleRelisten() {
@@ -470,7 +427,7 @@ export default function StudentGame() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center p-4">
         <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
           <div className="mb-6">
-            <Award className="w-24 h-24 text-purple-500 mx-auto mb-4 animate-bounce" />
+            <Award className="w-24 h-24 text-purple-500 mx-auto mb-4 animate-bounce motion-reduce:animate-none" />
             <h1 className="text-5xl font-bold text-gray-800 mb-4">Sans faute!</h1>
             <p className="text-2xl text-gray-600 mb-4">Tu as réussi tous les mots du premier coup!</p>
           </div>
@@ -620,7 +577,7 @@ export default function StudentGame() {
                     disabled={showCorrect || showIncorrect || isPrefilled}
                     className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 border-4 rounded-lg text-2xl sm:text-3xl font-bold flex items-center justify-center transition-all ${
                       showIncorrect && incorrectPositions.includes(index)
-                        ? 'border-red-500 bg-red-100 text-red-700 animate-shake'
+                        ? 'border-red-500 bg-red-100 text-red-700 animate-shake motion-reduce:animate-none'
                         : showCorrect
                         ? 'border-green-500 bg-green-100 text-green-700'
                         : letter
@@ -685,7 +642,13 @@ export default function StudentGame() {
 
           {showCorrect && (
             <div className="mt-6 text-center">
-              <p className="text-3xl font-bold text-green-600 animate-bounce">Bravo! +20 points</p>
+              <p className="text-3xl font-bold text-green-600 animate-bounce motion-reduce:animate-none">Bravo! +20 points</p>
+              <button
+                onClick={goToNextWord}
+                className="mt-4 bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg shadow-lg"
+              >
+                Mot suivant →
+              </button>
             </div>
           )}
         </div>

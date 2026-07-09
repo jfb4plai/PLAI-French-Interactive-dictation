@@ -26,9 +26,9 @@ export class SpeechService {
   }
 
   speak(text: string, rate: number = 0.9): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if (!this.synthesis) {
-        reject(new Error('Speech synthesis not supported'));
+        resolve();
         return;
       }
 
@@ -45,8 +45,11 @@ export class SpeechService {
       utterance.rate = rate;
       utterance.volume = 1;
 
+      // A TTS failure or interruption (e.g. cancel() from a fast follow-up
+      // click) must never block the pedagogical flow, so this always
+      // resolves instead of rejecting.
       utterance.onend = () => resolve();
-      utterance.onerror = (error) => reject(error);
+      utterance.onerror = () => resolve();
 
       this.synthesis.speak(utterance);
     });
