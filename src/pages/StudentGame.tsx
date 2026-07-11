@@ -125,7 +125,7 @@ export default function StudentGame() {
       if (error) throw error;
 
       setSession(data);
-      const normalizedWords: WordConfig[] = data.word_list.map((item: any) => {
+      const normalizedWords: WordConfig[] = (data.word_list ?? []).map((item: any) => {
         if (typeof item === 'string') {
           return { word: item };
         }
@@ -394,7 +394,7 @@ export default function StudentGame() {
     if (session) {
       const challengeSession = { ...session, keyboard_mode: true };
       setSession(challengeSession);
-      const normalizedWords: WordConfig[] = session.word_list.map((item: any) => {
+      const normalizedWords: WordConfig[] = (session.word_list ?? []).map((item: any) => {
         if (typeof item === 'string') {
           return { word: item };
         }

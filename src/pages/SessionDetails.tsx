@@ -167,7 +167,7 @@ export default function SessionDetails() {
               <h3 className="text-xl font-bold text-gray-800 mb-4">Liste des mots</h3>
               <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
                 <ol className="space-y-2">
-                  {session.word_list.map((word, index) => (
+                  {(session.word_list ?? []).map((word, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <span className="text-gray-600 font-semibold">{index + 1}.</span>
                       <span className="text-gray-800 text-lg font-mono">{word}</span>
@@ -177,7 +177,7 @@ export default function SessionDetails() {
               </div>
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                 <p className="text-sm text-gray-700">
-                  <span className="font-semibold">Total:</span> {session.word_list.length} mots
+                  <span className="font-semibold">Total:</span> {session.word_list?.length ?? 0} mots
                 </p>
               </div>
             </div>

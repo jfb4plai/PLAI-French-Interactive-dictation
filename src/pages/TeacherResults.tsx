@@ -126,7 +126,7 @@ export default function TeacherResults() {
               </div>
               <div>
                 <p className="text-gray-600">Mots</p>
-                <p className="text-2xl font-bold text-gray-800">{session.word_list.length}</p>
+                <p className="text-2xl font-bold text-gray-800">{session.word_list?.length ?? 0}</p>
               </div>
             </div>
           </div>

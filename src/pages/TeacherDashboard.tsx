@@ -180,7 +180,7 @@ function SessionCard({ session, getResultsCount, onDelete }: { session: Session;
           </div>
           <div className="flex items-center gap-6 text-gray-600">
             {session.teacher_name && <span>{session.teacher_name}</span>}
-            <span>{session.word_list.length} mots</span>
+            <span>{session.word_list?.length ?? 0} mots</span>
             <span>{resultsCount} élève{resultsCount > 1 ? 's' : ''}</span>
             <span>{new Date(session.created_at).toLocaleDateString('fr-FR')}</span>
           </div>
