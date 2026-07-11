@@ -58,14 +58,23 @@ export default function TeacherDashboard() {
         throw resultsError;
       }
 
-      const { error: sessionError } = await supabase
+      const { data: deletedRows, error: sessionError } = await supabase
         .from('sessions')
         .delete()
-        .eq('id', sessionId);
+        .eq('id', sessionId)
+        .select('id');
 
       if (sessionError) {
         console.error('Error deleting session:', sessionError);
         throw sessionError;
+      }
+
+      if (!deletedRows || deletedRows.length === 0) {
+        // No error, but nothing was actually deleted: RLS silently blocked
+        // the operation (row not owned by this account), so don't lie
+        // to the teacher with a false success message.
+        alert("Cette dictée n'a pas pu être supprimée : elle n'est pas rattachée à votre compte (dictée ancienne créée avant la mise en place des permissions). Contactez le support pour la faire supprimer manuellement.");
+        return;
       }
 
       alert('Dictée supprimée avec succès !');
