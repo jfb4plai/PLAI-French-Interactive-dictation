@@ -18,7 +18,7 @@ export default function StudentEntry() {
 
     try {
       const { data, error: dbError } = await supabase
-        .from('sessions')
+        .from('dictee_sessions')
         .select('*')
         .eq('access_code', accessCode.toUpperCase())
         .maybeSingle();

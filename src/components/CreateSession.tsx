@@ -356,7 +356,7 @@ export default function CreateSession({ onBack, initialData }: CreateSessionProp
       console.log('Word list:', wordList);
 
       const { data, error } = await supabase
-        .from('sessions')
+        .from('dictee_sessions')
         .insert({
           title: title,
           teacher_name: teacherName,

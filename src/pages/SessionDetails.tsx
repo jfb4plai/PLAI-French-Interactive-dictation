@@ -20,7 +20,7 @@ export default function SessionDetails() {
   async function loadSession() {
     try {
       const { data, error } = await supabase
-        .from('sessions')
+        .from('dictee_sessions')
         .select('*')
         .eq('id', sessionId)
         .single();

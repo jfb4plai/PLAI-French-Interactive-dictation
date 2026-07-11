@@ -20,7 +20,7 @@ export default function TeacherDashboard() {
   async function loadSessions() {
     try {
       const { data, error } = await supabase
-        .from('sessions')
+        .from('dictee_sessions')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -59,7 +59,7 @@ export default function TeacherDashboard() {
       }
 
       const { data: deletedRows, error: sessionError } = await supabase
-        .from('sessions')
+        .from('dictee_sessions')
         .delete()
         .eq('id', sessionId)
         .select('id');

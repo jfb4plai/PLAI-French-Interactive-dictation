@@ -18,7 +18,7 @@ export default function TeacherResults() {
   async function loadData() {
     try {
       const { data: sessionData, error: sessionError } = await supabase
-        .from('sessions')
+        .from('dictee_sessions')
         .select('*')
         .eq('id', sessionId)
         .single();
