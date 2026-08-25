@@ -4,18 +4,20 @@ import { ArrowLeft, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function TeacherAuth() {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, sendPasswordReset } = useAuth();
   const navigate = useNavigate();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     if (mode === 'signup') {
@@ -37,6 +39,13 @@ export default function TeacherAuth() {
           : 'Erreur lors de la création du compte');
       } else {
         navigate('/enseignant/dashboard');
+      }
+    } else if (mode === 'reset') {
+      const { error } = await sendPasswordReset(email);
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess('Email envoyé ! Vérifiez votre boîte mail pour créer un nouveau mot de passe.');
       }
     } else {
       const { error } = await signIn(email, password);
@@ -70,11 +79,13 @@ export default function TeacherAuth() {
 
         <div className="bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-2 text-center">
-            {mode === 'login' ? 'Connexion Enseignant' : 'Créer un compte'}
+            {mode === 'login' ? 'Connexion Enseignant' : mode === 'reset' ? 'Mot de passe oublié' : 'Créer un compte'}
           </h2>
           <p className="text-gray-600 text-center mb-6">
             {mode === 'login'
               ? 'Accédez à votre espace enseignant'
+              : mode === 'reset'
+              ? 'Entrez votre email pour recevoir un lien de réinitialisation'
               : 'Créez votre compte pour gérer vos dictées'}
           </p>
 
@@ -97,23 +108,25 @@ export default function TeacherAuth() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-gray-700 font-semibold mb-2">
-                Mot de passe
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === 'signup' ? 'Au moins 6 caractères' : 'Votre mot de passe'}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
-                  required
-                />
+            {mode !== 'reset' && (
+              <div>
+                <label htmlFor="password" className="block text-gray-700 font-semibold mb-2">
+                  Mot de passe
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={mode === 'signup' ? 'Au moins 6 caractères' : 'Votre mot de passe'}
+                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none text-lg"
+                    required
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {mode === 'signup' && (
               <div>
@@ -140,6 +153,11 @@ export default function TeacherAuth() {
                 {error}
               </div>
             )}
+            {success && (
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 text-green-700 text-sm">
+                {success}
+              </div>
+            )}
 
             <button
               type="submit"
@@ -153,6 +171,8 @@ export default function TeacherAuth() {
                   <LogIn className="w-5 h-5" />
                   Se connecter
                 </>
+              ) : mode === 'reset' ? (
+                'Envoyer le lien'
               ) : (
                 <>
                   <UserPlus className="w-5 h-5" />
@@ -162,18 +182,37 @@ export default function TeacherAuth() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => {
-                setMode(mode === 'login' ? 'signup' : 'login');
-                setError('');
-              }}
-              className="text-blue-600 hover:text-blue-700 font-semibold"
-            >
-              {mode === 'login'
-                ? "Pas encore de compte ? Créer un compte"
-                : "Déjà un compte ? Se connecter"}
-            </button>
+          <div className="mt-6 text-center space-y-2">
+            {mode !== 'reset' && (
+              <button
+                onClick={() => {
+                  setMode(mode === 'login' ? 'signup' : 'login');
+                  setError('');
+                  setSuccess('');
+                }}
+                className="block w-full text-blue-600 hover:text-blue-700 font-semibold"
+              >
+                {mode === 'login'
+                  ? "Pas encore de compte ? Créer un compte"
+                  : "Déjà un compte ? Se connecter"}
+              </button>
+            )}
+            {mode === 'login' && (
+              <button
+                onClick={() => { setMode('reset'); setError(''); setSuccess(''); }}
+                className="block w-full text-gray-500 hover:text-gray-700 text-sm"
+              >
+                Mot de passe oublié ?
+              </button>
+            )}
+            {mode === 'reset' && (
+              <button
+                onClick={() => { setMode('login'); setError(''); setSuccess(''); }}
+                className="block w-full text-gray-500 hover:text-gray-700 text-sm"
+              >
+                ← Retour à la connexion
+              </button>
+            )}
           </div>
         </div>
       </div>

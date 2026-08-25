@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import TeacherAuth from './pages/TeacherAuth';
+import ResetPassword from './pages/ResetPassword';
 import TeacherDashboard from './pages/TeacherDashboard';
 import SessionDetails from './pages/SessionDetails';
 import TeacherResults from './pages/TeacherResults';
@@ -16,6 +17,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/enseignant/auth" element={<TeacherAuth />} />
+          <Route path="/enseignant/reinitialiser-mot-de-passe" element={<ResetPassword />} />
           <Route path="/enseignant" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
           <Route path="/enseignant/dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
           <Route path="/enseignant/session/:sessionId" element={<ProtectedRoute><SessionDetails /></ProtectedRoute>} />
