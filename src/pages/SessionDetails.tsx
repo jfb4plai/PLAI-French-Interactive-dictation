@@ -170,7 +170,18 @@ export default function SessionDetails() {
                   {(session.word_list ?? []).map((word, index) => (
                     <li key={index} className="flex items-center gap-2">
                       <span className="text-gray-600 font-semibold">{index + 1}.</span>
-                      <span className="text-gray-800 text-lg font-mono">{word}</span>
+                      <span className="text-gray-800 text-lg font-mono">
+                        {typeof word === 'string' ? word : word.word}
+                      </span>
+                      {typeof word !== 'string' && word.image_url && (
+                        <span className="text-xs text-gray-500">image</span>
+                      )}
+                      {typeof word !== 'string' && word.prefilled_indices?.length > 0 && (
+                        <span className="text-xs text-gray-500">lettres pré-remplies</span>
+                      )}
+                      {typeof word !== 'string' && word.parasite_letters?.length > 0 && (
+                        <span className="text-xs text-gray-500">lettres parasites</span>
+                      )}
                     </li>
                   ))}
                 </ol>
